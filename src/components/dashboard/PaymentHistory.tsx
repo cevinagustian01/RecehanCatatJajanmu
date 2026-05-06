@@ -129,14 +129,18 @@ export default function PaymentHistory() {
     setCurrentPage(1);
   };
 
-  const handleCategoryChange = (val: string) => {
-    setCategoryFilter(val);
-    setCurrentPage(1);
+  const handleCategoryChange = (val: string | null) => {
+    if (val !== null) {
+      setCategoryFilter(val);
+      setCurrentPage(1);
+    }
   };
 
-  const handleWalletChange = (val: string) => {
-    setWalletFilter(val);
-    setCurrentPage(1);
+  const handleWalletChange = (val: string | null) => {
+    if (val !== null) {
+      setWalletFilter(val);
+      setCurrentPage(1);
+    }
   };
 
   const clearFilters = () => {

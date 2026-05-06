@@ -183,7 +183,7 @@ async function processWebhook(body: unknown) {
   }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(req: NextRequest): Promise<Response> {
   try {
     const body = await req.json();
 
