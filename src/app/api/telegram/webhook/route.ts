@@ -24,18 +24,23 @@ async function sendTelegramMessage(chatId: string, text: string) {
   }
 }
 
-async function processWebhook(body: unknown) {
-  const payload = body as { message?: { text?: string; chat?: { id?: string | number } } };
-  const message = payload.message;
-  if (!message || !message.text || !message.chat || !message.chat.id) return;
-
-  const chatId = message.chat.id.toString();
-  const text = message.text;
-
-  console.log(`[Webhook] Menerima pesan dari chatId ${chatId}: "${text}"`);
-
+export async function POST(req: NextRequest): Promise<Response> {
   try {
-    // Use OpenAI to parse the natural language text
+    const body = await req.json();
+    const payload = body as { message?: { text?: string; chat?: { id?: string | number } } };
+    const message = payload.message;
+    
+    // Ignore invalid webhooks, but return 200 OK to stop retries
+    if (!message || !message.text || !message.chat || !message.chat.id) {
+      return NextResponse.json({ ok: true, status: "ignored" });
+    }
+
+    const chatId = message.chat.id.toString();
+    const text = message.text;
+
+    console.log(`[Webhook] Menerima pesan dari chatId ${chatId}: "${text}"`);
+
+    // 1. AI Parsing
     const completion = await openai.chat.completions.create({
       model: "MiniMax-M2.7-highspeed",
       messages: [
@@ -56,16 +61,16 @@ async function processWebhook(body: unknown) {
 
     let parsedData;
     try {
-      if (!parsedJsonStr) {
-        throw new Error("Respons AI kosong");
-      }
+      if (!parsedJsonStr) throw new Error("Respons AI kosong");
       parsedData = JSON.parse(parsedJsonStr);
     } catch (err: unknown) {
       const parseError = err as Error;
       console.error("[Webhook] Gagal parsing respons AI:", parseError);
       await sendTelegramMessage(chatId, "⚠️ Maaf bos, AI gagal nangkep maksud lu. Coba tulis yang jelas ya!");
-      return;
+      return NextResponse.json({ ok: true, status: "ai_failed" });
     }
+    
+    console.log('AI Done');
 
     const amount = Number(parsedData.amount) || 0;
     const type = parsedData.type === "income" ? "income" : "expense";
@@ -73,99 +78,56 @@ async function processWebhook(body: unknown) {
     const merchant = parsedData.merchant || "Tidak Diketahui";
     const wallet_name = parsedData.wallet_name || "Main Wallet";
 
-    // 1. Upsert User
-    const userCreateData = {
-      telegram_id: chatId,
-      monthly_budget: 1000,
-      daily_income: 100,
-      persona_mode: "Therapist"
-    };
-    console.log('Final Data to Prisma (User Create):', userCreateData);
-    
+    // 2. Prisma Database Operations
     let user;
     try {
       user = await prisma.user.upsert({
         where: { telegram_id: chatId },
         update: {},
-        create: userCreateData
-      });
-    } catch (err: unknown) {
-      const dbError = err as Error;
-      console.error("[Webhook] Prisma Error User:", dbError?.message);
-      await sendTelegramMessage(chatId, `❌ Maaf bos, ada error database (User): ${dbError?.message}`);
-      return;
-    }
-
-    // 2. Find or Create Wallet
-    let wallet;
-    try {
-      wallet = await prisma.wallet.findFirst({
-        where: {
-          userId: user.id,
-          wallet_name: wallet_name
+        create: {
+          telegram_id: chatId,
+          monthly_budget: 1000,
+          daily_income: 100,
+          persona_mode: "Therapist"
         }
+      });
+      
+      let wallet = await prisma.wallet.findFirst({
+        where: { userId: user.id, wallet_name: wallet_name }
       });
 
       if (!wallet) {
-        const walletCreateData = {
-          userId: user.id,
-          wallet_name: wallet_name,
-          current_balance: 0
-        };
-        console.log('Final Data to Prisma (Wallet Create):', walletCreateData);
         wallet = await prisma.wallet.create({
-          data: walletCreateData
+          data: { userId: user.id, wallet_name: wallet_name, current_balance: 0 }
         });
       }
-    } catch (err: unknown) {
-      const dbError = err as Error;
-      console.error("[Webhook] Prisma Error Wallet:", dbError?.message);
-      await sendTelegramMessage(chatId, `❌ Maaf bos, ada error database (Wallet): ${dbError?.message}`);
-      return;
-    }
 
-    // 3. Create Transaction
-    const transactionCreateData = {
-      walletId: wallet.id,
-      amount: amount,
-      type: type,
-      category: category,
-      merchant: merchant
-    };
-    console.log('Final Data to Prisma (Transaction Create):', transactionCreateData);
-    
-    try {
       await prisma.transaction.create({
-        data: transactionCreateData
+        data: {
+          walletId: wallet.id,
+          amount: amount,
+          type: type,
+          category: category,
+          merchant: merchant
+        }
       });
-    } catch (err: unknown) {
-      const dbError = err as Error;
-      console.error("[Webhook] Prisma Error Transaction:", dbError?.message);
-      await sendTelegramMessage(chatId, `❌ Maaf bos, ada error database (Transaksi): ${dbError?.message}`);
-      return;
-    }
 
-    // 4. Update Wallet Balance
-    const newBalance = type === "income" 
-      ? wallet.current_balance + amount 
-      : wallet.current_balance - amount;
-      
-    const walletUpdateData = { current_balance: newBalance };
-    console.log('Final Data to Prisma (Wallet Update):', walletUpdateData);
-    
-    try {
+      const newBalance = type === "income" ? wallet.current_balance + amount : wallet.current_balance - amount;
       await prisma.wallet.update({
         where: { id: wallet.id },
-        data: walletUpdateData
+        data: { current_balance: newBalance }
       });
+      
     } catch (err: unknown) {
       const dbError = err as Error;
-      console.error("[Webhook] Prisma Error Wallet Update:", dbError?.message);
-      await sendTelegramMessage(chatId, `❌ Maaf bos, ada error saat update saldo dompet: ${dbError?.message}`);
-      return;
+      console.error("[Webhook] Prisma Error:", dbError?.message);
+      await sendTelegramMessage(chatId, `❌ Maaf bos, ada error database: ${dbError?.message}`);
+      return NextResponse.json({ ok: true, status: "db_failed" });
     }
+    
+    console.log('Prisma Done');
 
-    // 5. Send confirmation message back to Telegram
+    // 3. Send Telegram Confirmation
     const formattedAmount = new Intl.NumberFormat('id-ID', { 
       style: 'currency', 
       currency: 'IDR',
@@ -175,26 +137,15 @@ async function processWebhook(body: unknown) {
     
     const replyText = `✅ Berhasil dicatat: ${formattedAmount} ke dompet ${wallet_name} (sebagai ${type === "income" ? "Pemasukan" : "Pengeluaran"} di ${merchant} - ${category})`;
     await sendTelegramMessage(chatId, replyText);
+    
+    console.log('Telegram Sent');
+
+    // Return strictly at the absolute end
+    return NextResponse.json({ ok: true, status: "success" });
 
   } catch (err: unknown) {
     const error = err as Error;
-    console.error("Telegram Webhook Processing Error:", error);
-    await sendTelegramMessage(chatId, `❌ Maaf bos, ada error internal saat memproses datanya.`);
-  }
-}
-
-export async function POST(req: NextRequest): Promise<Response> {
-  try {
-    const body = await req.json();
-
-    // Jalankan secara asynchronous tanpa await, agar Telegram tidak timeout dan ngeloop
-    processWebhook(body).catch(console.error);
-
-    // Langsung return 200 OK sesegera mungkin
-    return NextResponse.json({ ok: true });
-
-  } catch (err: unknown) {
-    console.error("Invalid Webhook JSON:", err);
-    return NextResponse.json({ ok: false, error: "Invalid payload" }, { status: 400 });
+    console.error("Telegram Webhook Global Error:", error);
+    return NextResponse.json({ ok: true, status: "internal_error" }); // Return ok true to prevent telegram endless loops
   }
 }
