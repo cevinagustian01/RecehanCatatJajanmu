@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options di sini dikosongin aja atau biarin default */
+  /* Biarkan kosong atau gunakan opsi default saja */
 };
 
 export default nextConfig;
