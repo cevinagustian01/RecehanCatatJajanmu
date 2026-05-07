@@ -1,16 +1,27 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Bell, Search, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function Header() {
+  const [greeting, setGreeting] = useState("Selamat Pagi, Cevin!");
+
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting("Selamat Pagi, Cevin! 🌅");
+    else if (hour < 15) setGreeting("Selamat Siang, Cevin! ☀️");
+    else if (hour < 18) setGreeting("Selamat Sore, Cevin! 🌇");
+    else setGreeting("Selamat Malam, Cevin! 🌙");
+  }, []);
+
   return (
     <header className="flex items-center justify-between border-b border-slate-100 bg-white/80 px-8 py-5 backdrop-blur-md">
       {/* Left side */}
       <div>
         <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-          Welcome Back, Alex! 👋
+          {greeting}
         </h2>
         <p className="mt-0.5 text-sm text-slate-500">
           Here&apos;s what&apos;s happening with your finances today.

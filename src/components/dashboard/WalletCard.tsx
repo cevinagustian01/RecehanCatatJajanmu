@@ -4,7 +4,7 @@ import { Wifi, Eye, EyeOff, TrendingUp, ArrowUpRight } from "lucide-react";
 import { useState } from "react";
 import { formatRupiah } from "@/lib/utils";
 
-export default function WalletCard() {
+export default function WalletCard({ totalBalance = 0, income = 0, expenses = 0 }: { totalBalance?: number; income?: number; expenses?: number }) {
   const [showBalance, setShowBalance] = useState(true);
 
   return (
@@ -18,7 +18,7 @@ export default function WalletCard() {
               <TrendingUp className="h-4 w-4 text-emerald-500" />
             </div>
           </div>
-          <p className="mt-2 text-2xl font-bold text-slate-900">{formatRupiah(48574500)}</p>
+          <p className="mt-2 text-2xl font-bold text-slate-900">{formatRupiah(totalBalance)}</p>
           <div className="mt-1 flex items-center gap-1">
             <ArrowUpRight className="h-3.5 w-3.5 text-emerald-500" />
             <span className="text-xs font-semibold text-emerald-600">+12.5%</span>
@@ -32,7 +32,7 @@ export default function WalletCard() {
               <ArrowUpRight className="h-4 w-4 text-blue-500" />
             </div>
           </div>
-          <p className="mt-2 text-2xl font-bold text-slate-900">{formatRupiah(12830000)}</p>
+          <p className="mt-2 text-2xl font-bold text-slate-900">{formatRupiah(income)}</p>
           <div className="mt-1 flex items-center gap-1">
             <ArrowUpRight className="h-3.5 w-3.5 text-emerald-500" />
             <span className="text-xs font-semibold text-emerald-600">+8.2%</span>
@@ -46,7 +46,7 @@ export default function WalletCard() {
               <TrendingUp className="h-4 w-4 text-orange-500 rotate-180" />
             </div>
           </div>
-          <p className="mt-2 text-2xl font-bold text-slate-900">{formatRupiah(6240500)}</p>
+          <p className="mt-2 text-2xl font-bold text-slate-900">{formatRupiah(expenses)}</p>
           <div className="mt-1 flex items-center gap-1">
             <ArrowUpRight className="h-3.5 w-3.5 text-red-500 rotate-90" />
             <span className="text-xs font-semibold text-red-500">-3.1%</span>
@@ -89,7 +89,7 @@ export default function WalletCard() {
           <div className="mt-6">
             <p className="text-sm font-medium text-emerald-100">Total Balance</p>
             <p className="mt-1 text-3xl font-bold tracking-tight">
-              {showBalance ? formatRupiah(48574500) : "••••••••"}
+              {showBalance ? formatRupiah(totalBalance) : "••••••••"}
             </p>
           </div>
 

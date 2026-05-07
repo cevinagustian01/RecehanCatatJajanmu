@@ -2,7 +2,9 @@
 
 import * as React from "react";
 import { format, isWithinInterval, startOfDay, endOfDay } from "date-fns";
-import { Calendar as CalendarIcon, Download, ArrowUpRight, ArrowDownLeft } from "lucide-react";
+import { Calendar as CalendarIcon, Download, ArrowUpRight, ArrowDownLeft, Trash2 } from "lucide-react";
+import * as xlsx from "xlsx";
+import { deleteTransaction } from "@/app/actions/transactions";
 import { DateRange } from "react-day-picker";
 
 import { cn, formatRupiah } from "@/lib/utils";
@@ -57,25 +59,13 @@ const statusCls: Record<string, string> = {
   failed: "bg-red-50 text-red-700 border-red-200",
 };
 
-import { getTransactions } from "@/app/actions/transactions";
-
-export default function PaymentHistory() {
-  const [data, setData] = React.useState<Transaction[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
+export default function PaymentHistory({ initialData = [] }: { initialData?: Transaction[] }) {
+  const [data, setData] = React.useState<Transaction[]>(initialData);
+  const [isLoading, setIsLoading] = React.useState(false);
 
   React.useEffect(() => {
-    async function loadData() {
-      try {
-        const result = await getTransactions();
-        setData(result as Transaction[]);
-      } catch (error) {
-        console.error("Failed to load transactions", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadData();
-  }, []);
+    setData(initialData);
+  }, [initialData]);
 
   // Compute dynamic filters based on real data
   const CATEGORIES = React.useMemo(() => Array.from(new Set(data.map(t => t.category))), [data]);
@@ -150,30 +140,38 @@ export default function PaymentHistory() {
     setCurrentPage(1);
   };
 
-  const handleExportCSV = () => {
-    const headers = ["Merchant", "Category", "Wallet", "Amount", "Type", "Date", "Status"];
-    const csvContent = [
-      headers.join(","),
-      ...filteredData.map(tx => [
-        `"${tx.name}"`,
-        tx.category,
-        tx.wallet,
-        tx.amount.toFixed(2),
-        tx.type,
-        format(tx.date, "yyyy-MM-dd"),
-        tx.status
-      ].join(","))
-    ].join("\n");
+  const handleExportExcel = () => {
+    const exportData = filteredData.map(tx => ({
+      Tanggal: format(tx.date, "yyyy-MM-dd"),
+      Kategori: tx.category,
+      Dompet: tx.wallet,
+      Tipe: tx.type === 'credit' ? 'Pemasukan' : 'Pengeluaran',
+      "Nominal Rupiah": tx.amount,
+      Merchant: tx.name
+    }));
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", "transactions.csv");
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const worksheet = xlsx.utils.json_to_sheet(exportData);
+    const workbook = xlsx.utils.book_new();
+    xlsx.utils.book_append_sheet(workbook, worksheet, "Transactions");
+    
+    xlsx.writeFile(workbook, "Transaksi_Keuangan.xlsx");
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Yakin mau hapus transaksi ini? Saldo dompet akan dihitung ulang.")) return;
+    
+    setIsLoading(true);
+    try {
+      const res = await deleteTransaction(id);
+      if (!res.success) {
+        alert(res.message);
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Gagal menghapus transaksi.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -187,11 +185,11 @@ export default function PaymentHistory() {
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={handleExportCSV}
-          className="text-slate-600 hover:text-slate-900"
+          onClick={handleExportExcel}
+          className="text-slate-600 hover:text-emerald-700 hover:border-emerald-200 hover:bg-emerald-50"
         >
           <Download className="mr-2 h-4 w-4" />
-          Export CSV
+          Export Excel
         </Button>
       </div>
 
@@ -269,8 +267,8 @@ export default function PaymentHistory() {
       </div>
 
       {/* Table Section */}
-      <div className="rounded-md border border-slate-100 overflow-hidden">
-        <Table>
+      <div className="rounded-md border border-slate-100 overflow-x-auto w-full">
+        <Table className="min-w-[800px]">
           <TableHeader className="bg-slate-50/50">
             <TableRow className="hover:bg-transparent">
               <TableHead className="font-semibold text-slate-600 w-[250px]">Merchant</TableHead>
@@ -279,12 +277,13 @@ export default function PaymentHistory() {
               <TableHead className="font-semibold text-slate-600">Date</TableHead>
               <TableHead className="font-semibold text-slate-600">Status</TableHead>
               <TableHead className="text-right font-semibold text-slate-600">Amount</TableHead>
+              <TableHead className="w-[50px] font-semibold text-slate-600 text-center">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-32 text-center text-slate-500">
+                <TableCell colSpan={7} className="h-32 text-center text-slate-500">
                   <div className="flex flex-col items-center justify-center">
                     <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mb-2"></div>
                     <p>Loading transactions...</p>
@@ -327,11 +326,22 @@ export default function PaymentHistory() {
                       {tx.type === "credit" ? "+" : "-"}{formatRupiah(tx.amount)}
                     </span>
                   </TableCell>
+                  <TableCell className="text-center">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => handleDelete(tx.id)}
+                      className="text-slate-400 hover:text-red-600 hover:bg-red-50 h-8 w-8"
+                      title="Hapus Transaksi"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="h-32 text-center text-slate-500">
+                <TableCell colSpan={7} className="h-32 text-center text-slate-500">
                   <div className="flex flex-col items-center justify-center">
                     <p className="text-slate-900 font-medium">No transactions found</p>
                     <p className="text-sm mt-1">Get started by creating a new transaction.</p>

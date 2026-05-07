@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Wallet,
@@ -13,16 +14,16 @@ import {
 } from "lucide-react";
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", active: true },
-  { icon: Wallet, label: "My Wallet", active: false },
-  { icon: ArrowLeftRight, label: "Transactions", active: false },
-  { icon: ChartBar, label: "Analytics", active: false },
-  { icon: CreditCard, label: "Cards", active: false },
-  { icon: Settings, label: "Settings", active: false },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/" },
+  { icon: Wallet, label: "My Wallet", href: "/wallet" },
+  { icon: ArrowLeftRight, label: "Transactions", href: "/transactions" },
+  { icon: ChartBar, label: "Analytics", href: "/analytics" },
+  { icon: CreditCard, label: "Cards", href: "/cards" },
+  { icon: Settings, label: "Settings", href: "/settings" },
 ];
 
 export default function Sidebar() {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const pathname = usePathname();
 
   return (
     <aside className="fixed left-0 top-0 z-40 flex h-screen w-[260px] flex-col border-r border-slate-100 bg-white">
@@ -47,12 +48,12 @@ export default function Sidebar() {
           Menu
         </p>
         <ul className="space-y-1">
-          {navItems.map((item, index) => {
-            const isActive = index === activeIndex;
+          {navItems.map((item) => {
+            const isActive = pathname === item.href;
             return (
               <li key={item.label}>
-                <button
-                  onClick={() => setActiveIndex(index)}
+                <Link
+                  href={item.href}
                   className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                     isActive
                       ? "bg-emerald-50 text-emerald-700 shadow-sm"
@@ -72,7 +73,7 @@ export default function Sidebar() {
                   {isActive && (
                     <div className="ml-auto h-2 w-2 rounded-full bg-emerald-500" />
                   )}
-                </button>
+                </Link>
               </li>
             );
           })}

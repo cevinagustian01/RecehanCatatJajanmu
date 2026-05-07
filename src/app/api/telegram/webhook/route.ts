@@ -40,13 +40,58 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     console.log(`[Webhook] Menerima pesan dari chatId ${chatId}: "${text}"`);
 
+    // 0. Check for Undo command
+    const lowerText = text.toLowerCase().trim();
+    if (lowerText === 'batal' || lowerText === 'hapus' || lowerText === 'undo') {
+      try {
+        const user = await prisma.user.findUnique({
+          where: { telegram_id: chatId }
+        });
+
+        if (!user) {
+          await sendTelegramMessage(chatId, "⚠️ Belum ada transaksi yang bisa dihapus bos.");
+          return NextResponse.json({ ok: true, status: "success" });
+        }
+
+        const lastTx = await prisma.transaction.findFirst({
+          where: { wallet: { userId: user.id } },
+          orderBy: { created_at: 'desc' },
+          include: { wallet: true }
+        });
+
+        if (!lastTx) {
+          await sendTelegramMessage(chatId, "⚠️ Belum ada transaksi yang bisa dihapus bos.");
+          return NextResponse.json({ ok: true, status: "success" });
+        }
+
+        const newBalance = String(lastTx.type).toUpperCase() === 'INCOME' 
+          ? lastTx.wallet.current_balance - lastTx.amount
+          : lastTx.wallet.current_balance + lastTx.amount;
+
+        await prisma.$transaction([
+          prisma.transaction.delete({ where: { id: lastTx.id } }),
+          prisma.wallet.update({
+            where: { id: lastTx.walletId },
+            data: { current_balance: newBalance }
+          })
+        ]);
+
+        await sendTelegramMessage(chatId, "✅ Siap bos, transaksi terakhir berhasil dihapus. Saldo lu udah balik normal ya!");
+        return NextResponse.json({ ok: true, status: "success" });
+      } catch (err) {
+        console.error("Undo error:", err);
+        await sendTelegramMessage(chatId, "❌ Gagal membatalkan transaksi.");
+        return NextResponse.json({ ok: true, status: "error" });
+      }
+    }
+
     // 1. AI Parsing
     const completion = await openai.chat.completions.create({
       model: "MiniMax-M2.7-highspeed",
       messages: [
         {
           role: "system",
-          content: `Kamu adalah asisten pencatat keuangan pintar. Ekstrak data dari teks user ke dalam FORMAT JSON INI SAJA: {"amount": number, "type": "EXPENSE" | "INCOME", "category": string, "merchant": string, "wallet_name": string}. JANGAN tambahkan teks percakapan apapun, hanya raw JSON.\nPENTING:\n- "type": "INCOME" untuk pemasukan (contoh: gajian, dapet uang, bonus).\n- "type": "EXPENSE" untuk pengeluaran (contoh: beli, jajan, bayar).\n- "amount": ubah angka gaul/singkatan jadi integer asli tanpa simbol (misal: '50rb' atau '50 ribu' menjadi 50000).\n- "wallet_name": tangkap nama dompet jika disebutkan (misal: 'BCA', 'GoPay', 'Mandiri'). Jika tidak disebutkan, gunakan "Main Wallet".`
+          content: `Kamu adalah asisten pencatat keuangan pintar. Ekstrak data dari teks user ke dalam FORMAT JSON INI SAJA: {"intent": "TRANSACTION" | "QUERY", "amount": number, "type": "EXPENSE" | "INCOME", "category": string, "merchant": string, "wallet_name": string}. JANGAN tambahkan teks percakapan apapun, hanya raw JSON.\nPENTING:\n- "intent": "QUERY" jika user bertanya laporan/saldo (contoh: 'Saldo BCA berapa?', 'Bulan ini pengeluaran berapa?'). "TRANSACTION" jika mencatat uang masuk/keluar.\n- "type": "INCOME" untuk pemasukan, "EXPENSE" untuk pengeluaran.\n- "amount": ubah angka gaul/singkatan jadi integer asli tanpa simbol (misal: '50rb' menjadi 50000).\n- "wallet_name": tangkap nama dompet jika disebutkan (misal: 'BCA', 'GoPay'). Jika tidak disebutkan, gunakan "Main Wallet".`
         },
         {
           role: "user",
@@ -72,6 +117,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     
     console.log('AI Done');
 
+    const intent = (String(parsedData.intent).toUpperCase() === "QUERY") ? "QUERY" : "TRANSACTION";
     const amount = Number(parsedData.amount) || 0;
     const type = (String(parsedData.type).toUpperCase() === "INCOME") ? "INCOME" : "EXPENSE";
     const category = parsedData.category || "Lainnya";
@@ -93,6 +139,37 @@ export async function POST(req: NextRequest): Promise<Response> {
         }
       });
       
+      if (intent === "QUERY") {
+        let walletBalance = 0;
+        let queryWallet = await prisma.wallet.findFirst({
+          where: { userId: user.id, wallet_name: wallet_name }
+        });
+        
+        if (queryWallet) {
+          walletBalance = queryWallet.current_balance;
+        }
+
+        const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+        const expenses = await prisma.transaction.aggregate({
+          _sum: { amount: true },
+          where: {
+            wallet: { userId: user.id },
+            type: "EXPENSE",
+            created_at: { gte: startOfMonth }
+          }
+        });
+        
+        const totalExpense = expenses._sum.amount || 0;
+
+        const formattedExpense = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(totalExpense);
+        const formattedBalance = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(walletBalance);
+        
+        const replyText = `Total pengeluaran lu bulan ini udah ${formattedExpense} bos. Sisa saldo di ${wallet_name}: ${formattedBalance}`;
+        
+        await sendTelegramMessage(chatId, replyText);
+        return NextResponse.json({ ok: true, status: "success" });
+      }
+
       let wallet = await prisma.wallet.findFirst({
         where: { userId: user.id, wallet_name: wallet_name }
       });

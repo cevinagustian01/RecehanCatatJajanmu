@@ -7,15 +7,11 @@ import {
   Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
 
-const data = [
-  { month: "Jan", income: 4200, expenses: 2800 },
-  { month: "Feb", income: 3800, expenses: 3200 },
-  { month: "Mar", income: 5100, expenses: 2900 },
-  { month: "Apr", income: 4600, expenses: 3400 },
-  { month: "May", income: 5800, expenses: 3100 },
-  { month: "Jun", income: 4900, expenses: 3600 },
-  { month: "Jul", income: 6200, expenses: 3300 },
-];
+interface ChartData {
+  name: string;
+  income: number;
+  expenses: number;
+}
 
 type Period = "weekly" | "monthly" | "yearly";
 
@@ -49,7 +45,7 @@ const CustomTooltip = ({
   return null;
 };
 
-export default function CashflowChart() {
+export default function CashflowChart({ data }: { data: ChartData[] }) {
   const [period, setPeriod] = useState<Period>("monthly");
 
   return (
@@ -80,7 +76,7 @@ export default function CashflowChart() {
         <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
           <BarChart data={data} barGap={4} barCategoryGap="20%">
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-            <XAxis dataKey="month" axisLine={false} tickLine={false}
+            <XAxis dataKey="name" axisLine={false} tickLine={false}
               tick={{ fill: "#94a3b8", fontSize: 12, fontWeight: 500 }} />
             <YAxis axisLine={false} tickLine={false}
               tick={{ fill: "#94a3b8", fontSize: 12, fontWeight: 500 }}
@@ -89,7 +85,7 @@ export default function CashflowChart() {
             <Legend iconType="circle" iconSize={8}
               wrapperStyle={{ paddingTop: "16px", fontSize: "12px", fontWeight: 500 }} />
             <Bar dataKey="income" fill="#10b981" radius={[6, 6, 0, 0]} name="Income" />
-            <Bar dataKey="expenses" fill="#e2e8f0" radius={[6, 6, 0, 0]} name="Expenses" />
+            <Bar dataKey="expenses" fill="#ef4444" radius={[6, 6, 0, 0]} name="Expenses" />
           </BarChart>
         </ResponsiveContainer>
       </div>
