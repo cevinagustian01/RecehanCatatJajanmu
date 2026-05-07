@@ -3,6 +3,8 @@ import Header from "@/components/dashboard/Header";
 import prisma from "@/lib/prisma";
 import WalletClient from "./WalletClient";
 
+export const dynamic = 'force-dynamic';
+
 export default async function WalletPage() {
   const wallets = await prisma.wallet.findMany({
     include: {

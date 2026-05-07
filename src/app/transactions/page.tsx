@@ -7,6 +7,8 @@ import TransactionActions from "@/components/transactions/TransactionActions";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Wallet, ArrowUpRight, TrendingUp } from "lucide-react";
 
+export const dynamic = 'force-dynamic';
+
 export default async function TransactionsPage(props: { searchParams: Promise<{ query?: string, page?: string }> }) {
   const searchParams = await props.searchParams;
   const query = searchParams?.query || "";

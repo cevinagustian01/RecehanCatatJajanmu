@@ -7,6 +7,8 @@ import DashboardFilter from "@/components/dashboard/DashboardFilter";
 import BudgetTracker from "@/components/dashboard/BudgetTracker";
 import prisma from "@/lib/prisma";
 
+export const dynamic = 'force-dynamic';
+
 export default async function Home(props: { searchParams: Promise<{ timeRange?: string, wallet?: string }> }) {
   const searchParams = await props.searchParams;
   const timeRange = searchParams?.timeRange || "thisMonth";
