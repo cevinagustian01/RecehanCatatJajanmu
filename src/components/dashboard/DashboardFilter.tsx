@@ -30,7 +30,7 @@ export default function DashboardFilter({ wallets, currentTimeRange, currentWall
         <span className="text-sm font-semibold text-slate-600">Periode:</span>
         <Select 
           value={currentTimeRange} 
-          onValueChange={(val) => router.push(pathname + "?" + createQueryString("timeRange", val))}
+          onValueChange={(val) => router.push(pathname + "?" + createQueryString("timeRange", val || ""))}
         >
           <SelectTrigger className="w-[160px] bg-white">
             <SelectValue placeholder="Pilih Waktu" />
@@ -46,7 +46,7 @@ export default function DashboardFilter({ wallets, currentTimeRange, currentWall
         <span className="text-sm font-semibold text-slate-600">Dompet:</span>
         <Select 
           value={currentWallet} 
-          onValueChange={(val) => router.push(pathname + "?" + createQueryString("wallet", val))}
+          onValueChange={(val) => router.push(pathname + "?" + createQueryString("wallet", val || ""))}
         >
           <SelectTrigger className="w-[160px] bg-white">
             <SelectValue placeholder="Pilih Dompet" />

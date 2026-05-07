@@ -73,7 +73,7 @@ export default async function Home(props: { searchParams: Promise<{ timeRange?: 
       category: tx.category,
       wallet: tx.wallet.wallet_name,
       amount: tx.amount,
-      type: String(tx.type).toUpperCase() === 'INCOME' ? 'credit' : 'debit',
+      type: (String(tx.type).toUpperCase() === 'INCOME' ? 'credit' : 'debit') as "credit" | "debit",
       date: tx.created_at,
       status: 'completed',
   }));
