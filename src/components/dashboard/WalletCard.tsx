@@ -10,7 +10,7 @@ export default function WalletCard({ totalBalance = 0, income = 0, expenses = 0 
   return (
     <div className="space-y-5">
       {/* Stats row */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3 w-full">
         <div className="rounded-2xl bg-white p-4 ring-1 ring-slate-100 shadow-sm">
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Balance</p>

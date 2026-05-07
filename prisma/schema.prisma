@@ -37,3 +37,11 @@ model Transaction {
   created_at  DateTime @default(now())
   wallet      Wallet   @relation(fields: [walletId], references: [id])
 }
+
+model Budget {
+  id          String   @id @default(uuid()) @db.Uuid
+  category    String   @unique
+  limitAmount Float
+  period      String   @default("monthly")
+  created_at  DateTime @default(now())
+}

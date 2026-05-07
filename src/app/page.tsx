@@ -4,6 +4,7 @@ import WalletCard from "@/components/dashboard/WalletCard";
 import CashflowChart from "@/components/dashboard/CashflowChart";
 import PaymentHistory from "@/components/dashboard/PaymentHistory";
 import DashboardFilter from "@/components/dashboard/DashboardFilter";
+import BudgetTracker from "@/components/dashboard/BudgetTracker";
 import prisma from "@/lib/prisma";
 
 export default async function Home(props: { searchParams: Promise<{ timeRange?: string, wallet?: string }> }) {
@@ -95,6 +96,40 @@ export default async function Home(props: { searchParams: Promise<{ timeRange?: 
             <WalletCard totalBalance={totalBalance} income={income} expenses={expenses} />
             <CashflowChart data={chartData} />
           </div>
+
+          {/* Budget Tracker Section */}
+          {await (async () => {
+            const budgets = await prisma.budget.findMany();
+            if (budgets.length === 0) return null;
+
+            const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+            const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+            const monthExpenses = await prisma.transaction.findMany({
+              where: {
+                type: "EXPENSE",
+                created_at: { gte: monthStart, lte: monthEnd }
+              }
+            });
+
+            const spentByCategory = new Map<string, number>();
+            monthExpenses.forEach(tx => {
+              const cat = tx.category.toLowerCase();
+              spentByCategory.set(cat, (spentByCategory.get(cat) || 0) + tx.amount);
+            });
+
+            const budgetItems = budgets.map(b => ({
+              category: b.category,
+              spent: spentByCategory.get(b.category.toLowerCase()) || 0,
+              limit: b.limitAmount
+            }));
+
+            return (
+              <div className="mt-6">
+                <BudgetTracker items={budgetItems} />
+              </div>
+            );
+          })()}
 
           {/* Payment History */}
           <div className="mt-6 w-full max-w-full">

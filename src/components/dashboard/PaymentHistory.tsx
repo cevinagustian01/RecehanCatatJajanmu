@@ -2,10 +2,11 @@
 
 import * as React from "react";
 import { format, isWithinInterval, startOfDay, endOfDay } from "date-fns";
-import { Calendar as CalendarIcon, Download, ArrowUpRight, ArrowDownLeft, Trash2 } from "lucide-react";
+import { Calendar as CalendarIcon, Download, ArrowUpRight, ArrowDownLeft, Trash2, Edit2 } from "lucide-react";
 import * as xlsx from "xlsx";
 import { deleteTransaction } from "@/app/actions/transactions";
 import { DateRange } from "react-day-picker";
+import TransactionActions from "@/components/transactions/TransactionActions";
 
 import { cn, formatRupiah } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -326,16 +327,15 @@ export default function PaymentHistory({ initialData = [] }: { initialData?: Tra
                       {tx.type === "credit" ? "+" : "-"}{formatRupiah(tx.amount)}
                     </span>
                   </TableCell>
-                  <TableCell className="text-center">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => handleDelete(tx.id)}
-                      className="text-slate-400 hover:text-red-600 hover:bg-red-50 h-8 w-8"
-                      title="Hapus Transaksi"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                  <TableCell className="text-right">
+                    <TransactionActions tx={{
+                      id: tx.id,
+                      type: tx.type,
+                      amount: tx.amount,
+                      category: tx.category,
+                      merchant: tx.name,
+                      wallet: tx.wallet
+                    }} />
                   </TableCell>
                 </TableRow>
               ))

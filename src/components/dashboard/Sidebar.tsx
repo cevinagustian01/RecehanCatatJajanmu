@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSidebar } from "@/components/dashboard/SidebarContext";
 import {
   LayoutDashboard,
   Wallet,
@@ -11,6 +12,7 @@ import {
   HelpCircle,
   LogOut,
   CreditCard,
+  Target,
 } from "lucide-react";
 
 const navItems = [
@@ -19,14 +21,25 @@ const navItems = [
   { icon: ArrowLeftRight, label: "Transactions", href: "/transactions" },
   { icon: ChartBar, label: "Analytics", href: "/analytics" },
   { icon: CreditCard, label: "Cards", href: "/cards" },
+  { icon: Target, label: "Budget", href: "/settings/budget" },
   { icon: Settings, label: "Settings", href: "/settings" },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { isOpen, setIsOpen } = useSidebar();
 
   return (
-    <aside className="fixed left-0 top-0 z-40 flex h-screen w-[260px] flex-col border-r border-slate-100 bg-white">
+    <>
+      {/* Overlay for mobile */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 z-30 bg-slate-900/50 backdrop-blur-sm transition-opacity md:hidden"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+      
+      <aside className="hidden md:fixed md:left-0 md:top-0 md:z-40 md:flex md:h-screen md:w-[260px] md:flex-col md:border-r md:border-slate-100 md:bg-white">
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-7">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg shadow-emerald-200">
@@ -54,6 +67,7 @@ export default function Sidebar() {
               <li key={item.label}>
                 <Link
                   href={item.href}
+                  onClick={() => setIsOpen(false)}
                   className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                     isActive
                       ? "bg-emerald-50 text-emerald-700 shadow-sm"
@@ -95,6 +109,7 @@ export default function Sidebar() {
           Log Out
         </button>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }
