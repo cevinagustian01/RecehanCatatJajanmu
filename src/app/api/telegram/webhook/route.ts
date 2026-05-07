@@ -46,7 +46,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       messages: [
         {
           role: "system",
-          content: `Kamu adalah asisten pencatat keuangan pintar. Ekstrak data dari teks user ke dalam FORMAT JSON INI SAJA: {"amount": number, "type": "expense" | "income", "category": string, "merchant": string, "wallet_name": string}. JANGAN tambahkan teks percakapan apapun, hanya raw JSON. PENTING: Untuk 'amount', ubah angka gaul/singkatan jadi integer asli tanpa simbol (misal: '50rb' atau '50 ribu' menjadi 50000). Default wallet_name adalah "Main Wallet" jika tidak disebutkan.`
+          content: `Kamu adalah asisten pencatat keuangan pintar. Ekstrak data dari teks user ke dalam FORMAT JSON INI SAJA: {"amount": number, "type": "EXPENSE" | "INCOME", "category": string, "merchant": string, "wallet_name": string}. JANGAN tambahkan teks percakapan apapun, hanya raw JSON.\nPENTING:\n- "type": "INCOME" untuk pemasukan (contoh: gajian, dapet uang, bonus).\n- "type": "EXPENSE" untuk pengeluaran (contoh: beli, jajan, bayar).\n- "amount": ubah angka gaul/singkatan jadi integer asli tanpa simbol (misal: '50rb' atau '50 ribu' menjadi 50000).\n- "wallet_name": tangkap nama dompet jika disebutkan (misal: 'BCA', 'GoPay', 'Mandiri'). Jika tidak disebutkan, gunakan "Main Wallet".`
         },
         {
           role: "user",
@@ -73,13 +73,14 @@ export async function POST(req: NextRequest): Promise<Response> {
     console.log('AI Done');
 
     const amount = Number(parsedData.amount) || 0;
-    const type = parsedData.type === "income" ? "income" : "expense";
+    const type = (String(parsedData.type).toUpperCase() === "INCOME") ? "INCOME" : "EXPENSE";
     const category = parsedData.category || "Lainnya";
     const merchant = parsedData.merchant || "Tidak Diketahui";
     const wallet_name = parsedData.wallet_name || "Main Wallet";
 
     // 2. Prisma Database Operations
     let user;
+    let newBalance = 0;
     try {
       user = await prisma.user.upsert({
         where: { telegram_id: chatId },
@@ -112,7 +113,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         }
       });
 
-      const newBalance = type === "income" ? wallet.current_balance + amount : wallet.current_balance - amount;
+      newBalance = type === "INCOME" ? wallet.current_balance + amount : wallet.current_balance - amount;
       await prisma.wallet.update({
         where: { id: wallet.id },
         data: { current_balance: newBalance }
@@ -135,7 +136,20 @@ export async function POST(req: NextRequest): Promise<Response> {
       maximumFractionDigits: 0
     }).format(amount);
     
-    const replyText = `✅ Berhasil dicatat: ${formattedAmount} ke dompet ${wallet_name} (sebagai ${type === "income" ? "Pemasukan" : "Pengeluaran"} di ${merchant} - ${category})`;
+    const formattedBalance = new Intl.NumberFormat('id-ID', { 
+      style: 'currency', 
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(newBalance);
+
+    let replyText = "";
+    if (type === "INCOME") {
+      replyText = `✅ Asik gajian! ${formattedAmount} masuk ke ${wallet_name}. Saldo ${wallet_name} lu sekarang: ${formattedBalance}`;
+    } else {
+      replyText = `💸 Oke bos, catat! ${formattedAmount} dipake buat ${merchant} dari ${wallet_name}. Saldo ${wallet_name} lu sekarang: ${formattedBalance}`;
+    }
+    
     await sendTelegramMessage(chatId, replyText);
     
     console.log('Telegram Sent');
