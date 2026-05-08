@@ -42,12 +42,12 @@ export async function GET(request: Request) {
       let walletsDetail = "";
 
       for (const wallet of user.wallets) {
-        totalBalance += wallet.current_balance;
+        totalBalance += wallet.balance;
         const formattedWalletBal = new Intl.NumberFormat('id-ID', { 
           style: 'currency', 
           currency: 'IDR', 
           minimumFractionDigits: 0 
-        }).format(wallet.current_balance);
+        }).format(wallet.balance);
         walletsDetail += `\n🔸 ${wallet.wallet_name}: ${formattedWalletBal}`;
       }
 

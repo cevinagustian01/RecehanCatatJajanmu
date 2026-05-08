@@ -7,41 +7,100 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
 model User {
-  id             String   @id @default(uuid()) @db.Uuid
-  telegram_id    String   @unique
+  id             String   @id @default(uuid())
+  clerk_id       String?  @unique
+  email          String   @unique
+
+  // Existing Telegram identity (already in schema as telegram_id)
+  telegram_id    String?  @unique
+
+  role           Role     @default(USER)
+
+  // Financial
   monthly_budget Float    @default(0)
   daily_income   Float    @default(0)
   persona_mode   String   @default("Therapist")
+
+  // Profile (Settings page)
+  displayName    String?
+  avatarUrl      String?
+  phoneNumber    String?
+
+  // Connections (Settings page)
+  connectWhatsApp   Boolean @default(false)
+  connectTelegram   Boolean @default(false)
+
+  // Notifications (Settings page)
+  notifyTransactionAlerts Boolean @default(false)
+  notifyWeeklyReports     Boolean @default(false)
+  notifyDailyReminders    Boolean @default(false)
+
+  // Analytics / reminders
+  paydayDate     DateTime?
+
   created_at     DateTime @default(now())
   wallets        Wallet[]
+  budgets        Budget[]
+  categories     Category[]
 }
 
 model Wallet {
-  id              String        @id @default(uuid()) @db.Uuid
-  userId          String        @db.Uuid
+  id              String   @id @default(uuid())
+  userId          String
   wallet_name     String
-  current_balance Float         @default(0)
-  created_at      DateTime      @default(now())
-  user            User          @relation(fields: [userId], references: [id])
+  balance         Float    @default(0)
+  color           String?  // gradient theme: emerald, slate, purple, etc.
+  cardNumber      String?  // full card number (stored securely in production)
+  expiryDate      String?
+  cardHolder      String?  // name printed on card
+  cardType        String   @default("SECONDARY") // PRIMARY or SECONDARY
+  type            String   @default("BANK") // BANK, E-WALLET, CASH
+  created_at      DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id])
   transactions    Transaction[]
 }
 
 model Transaction {
-  id          String   @id @default(uuid()) @db.Uuid
-  walletId    String   @db.Uuid
+  id          String   @id @default(uuid())
+  walletId    String
   amount      Float
   type        String
-  category    String
+  categoryId  String?
   merchant    String
   created_at  DateTime @default(now())
   wallet      Wallet   @relation(fields: [walletId], references: [id])
+  category    Category? @relation(fields: [categoryId], references: [id])
 }
 
 model Budget {
-  id          String   @id @default(uuid()) @db.Uuid
-  category    String   @unique
-  limitAmount Float
+  id           String  @id @default(uuid())
+  userId       String  
+  categoryId   String  
+  limitAmount  Float
+  icon        String   @default("🎯")
   period      String   @default("monthly")
   created_at  DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+  category    Category @relation(fields: [categoryId], references: [id])
+
+  @@unique([userId, categoryId])
 }
+
+model Category {
+  id        String   @id @default(uuid())
+  userId    String
+  name      String
+  icon      String?  @default("🎯")
+  type      String?  @default("EXPENSE") // EXPENSE, INCOME, etc.
+  created_at DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  budgets   Budget[]
+  transactions Transaction[]
+}
+

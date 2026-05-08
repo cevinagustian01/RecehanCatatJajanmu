@@ -1,34 +1,42 @@
 "use client";
 
 import { useState } from "react";
-import { upsertBudget, deleteBudget } from "@/app/actions/budgets";
+import { upsertBudget, deleteBudget } from "@/actions/budget-actions";
 import { formatRupiah } from "@/lib/utils";
 import { Plus, Trash2, Loader2, Target, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { CATEGORIES, getCategoryLabel } from "@/lib/categories";
 
-type BudgetItem = { id: string, category: string, limitAmount: number, period: string };
+type BudgetItem = {
+  id: string;
+  categoryId: string;
+  category: string; // display label
+  limitAmount: number;
+  period: string;
+  icon?: string | null;
+};
 
 export default function BudgetClient({ initialBudgets }: { initialBudgets: BudgetItem[] }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [category, setCategory] = useState("");
+  const [categoryIdOrName, setCategoryIdOrName] = useState("");
   const [limitAmount, setLimitAmount] = useState("");
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!category.trim() || !limitAmount) return;
+    if (!categoryIdOrName.trim() || !limitAmount) return;
     setLoading(true);
 
+    // upsertBudget expects `categoryId` (it can also accept a category name)
     const res = await upsertBudget({
-      category: category.trim(),
-      limitAmount: parseInt(limitAmount.replace(/[^0-9]/g, '')) || 0
+      categoryId: categoryIdOrName.trim(),
+      limitAmount: parseInt(limitAmount.replace(/[^0-9]/g, "")) || 0,
     });
 
     setLoading(false);
     if (res.success) {
-      setCategory("");
+      setCategoryIdOrName("");
       setLimitAmount("");
       setIsAddOpen(false);
       router.refresh();
@@ -117,14 +125,16 @@ export default function BudgetClient({ initialBudgets }: { initialBudgets: Budge
               <div>
                 <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 block">Category</label>
                 <select
-                  value={category} onChange={e => setCategory(e.target.value)} required
+                  value={categoryIdOrName} onChange={(e) => setCategoryIdOrName(e.target.value)} required
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 >
                   <option value="">Select category...</option>
                   {CATEGORIES
-                    .filter(c => !initialBudgets.some(b => b.category === c.value))
-                    .map(c => (
-                      <option key={c.value} value={c.value}>{c.label}</option>
+                    .filter((c) => !initialBudgets.some((b) => b.category === c.value))
+                    .map((c) => (
+                      <option key={c.value} value={c.value}>
+                        {c.label}
+                      </option>
                     ))}
                 </select>
               </div>

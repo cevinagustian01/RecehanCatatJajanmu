@@ -14,9 +14,9 @@ const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="rounded-xl border border-slate-100 bg-white px-4 py-3 shadow-xl shadow-slate-200/50">
-        <p className="text-sm font-semibold text-slate-700">{data.category}</p>
-        <p className="text-sm font-bold text-slate-900 mt-1">{formatRupiah(data.amount)}</p>
+      <div className="flex flex-col items-center justify-center border-none bg-transparent p-2 shadow-none">
+        <p className="text-sm font-semibold text-slate-500 drop-shadow-sm">{data.category}</p>
+        <p className="text-lg font-bold text-slate-900 mt-1 drop-shadow-sm">{formatRupiah(data.amount)}</p>
       </div>
     );
   }
@@ -56,7 +56,11 @@ export default function CategoryPieChart({ data }: { data: CategoryData[] }) {
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip 
+              content={<CustomTooltip />} 
+              cursor={{ fill: 'transparent' }} 
+              contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} 
+            />
             <Legend 
               verticalAlign="bottom" 
               height={36}

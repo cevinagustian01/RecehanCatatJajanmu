@@ -2,53 +2,151 @@
 
 import prisma from "@/lib/prisma"
 import { revalidatePath } from "next/cache";
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { syncUser } from "@/lib/sync-user";
 
-export async function addWallet(data: { name: string, initialBalance: number }) {
+export async function getWallets() {
   try {
-    let user = await prisma.user.findFirst();
-    if (!user) {
-       user = await prisma.user.create({
-         data: {
-           telegram_id: "demo_user_" + Date.now(),
-         }
-       });
+    const { userId } = await auth();
+    if (!userId) return [];
+
+    const wallets = await prisma.wallet.findMany({
+      where: { userId },
+      orderBy: { created_at: 'desc' }
+    });
+    return wallets;
+  } catch (error) {
+    console.error("PRISMA ERROR IN GETWALLETS:", error);
+    return [];
+  }
+}
+
+export async function getWalletsList() {
+  try {
+    const { userId } = await auth();
+    if (!userId) return [];
+
+    const wallets = await prisma.wallet.findMany({
+      where: { userId },
+      orderBy: { created_at: 'desc' },
+      select: { id: true, wallet_name: true }
+    });
+    return wallets.map(w => ({ id: w.id, name: w.wallet_name }));
+  } catch (error) {
+    console.error("PRISMA ERROR IN GETWALLETSLIST:", error);
+    return [];
+  }
+}
+
+export async function addWallet(data: {
+  name: string,
+  balance: number,
+  color?: string | null,
+  cardNumber?: string | null,
+  expiryDate?: string | null,
+  cardHolder?: string | null,
+  cardType?: string | null,
+  type?: string | null
+}) {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return { success: false, message: "Unauthenticated" };
     }
+
+    const user = await currentUser();
+    const email = user?.emailAddresses?.[0]?.emailAddress;
+
+    const synced = email ? await syncUser(userId, email) : null;
 
     await prisma.wallet.create({
       data: {
-        userId: user.id,
+        // IMPORTANT: wallet.userId must reference User.id (UUID), not Clerk userId
+        userId: synced?.id ?? userId,
         wallet_name: data.name,
-        current_balance: data.initialBalance
+        balance: data.balance,
+        color: data.color,
+        cardNumber: data.cardNumber,
+        expiryDate: data.expiryDate,
+        cardHolder: data.cardHolder,
+        cardType: data.cardType || "SECONDARY",
+        type: data.type || "BANK",
       }
     });
 
     revalidatePath("/wallet");
     revalidatePath("/");
+    revalidatePath("/transactions");
     return { success: true };
   } catch (error) {
-    console.error("Error adding wallet:", error);
-    return { success: false, message: "Server error" };
+    console.error("PRISMA ERROR IN ADDWALLET:", error);
+    return { success: false, message: "Failed to add wallet" };
   }
 }
 
-export async function updateWallet(id: string, name: string) {
+export async function updateWallet(id: string, data: {
+  name?: string,
+  balance?: number,
+  color?: string | null,
+  cardNumber?: string | null,
+  expiryDate?: string | null,
+  cardHolder?: string | null,
+  cardType?: string | null,
+  type?: string | null
+}) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return { success: false, message: "Unauthenticated" };
+    }
+
+    // Verify ownership
+    const existing = await prisma.wallet.findFirst({
+      where: { id, userId }
+    });
+    if (!existing) {
+      return { success: false, message: "Wallet not found" };
+    }
+
     await prisma.wallet.update({
       where: { id },
-      data: { wallet_name: name }
+      data: {
+        ...(data.name !== undefined && { wallet_name: data.name }),
+        ...(data.balance !== undefined && { balance: data.balance }),
+        ...(data.color != null && { color: data.color }),
+        ...(data.cardNumber != null && { cardNumber: data.cardNumber }),
+        ...(data.expiryDate != null && { expiryDate: data.expiryDate }),
+        ...(data.cardHolder != null && { cardHolder: data.cardHolder }),
+        ...(data.cardType != null && { cardType: data.cardType }),
+        ...(data.type != null && { type: data.type }),
+      }
     });
-    
+
     revalidatePath("/wallet");
     revalidatePath("/");
     revalidatePath("/transactions");
     return { success: true };
   } catch (error) {
+    console.error("PRISMA ERROR IN UPDATEWALLET:", error);
     return { success: false, message: "Error updating wallet" };
   }
 }
 
 export async function deleteWallet(id: string) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return { success: false, message: "Unauthenticated" };
+    }
+
+    // Verify ownership before deleting
+    const wallet = await prisma.wallet.findFirst({
+      where: { id, userId }
+    });
+    if (!wallet) {
+      return { success: false, message: "Wallet not found" };
+    }
+
     await prisma.$transaction([
       prisma.transaction.deleteMany({ where: { walletId: id } }),
       prisma.wallet.delete({ where: { id } })
@@ -59,6 +157,7 @@ export async function deleteWallet(id: string) {
     revalidatePath("/transactions");
     return { success: true };
   } catch (error) {
+    console.error("PRISMA ERROR IN DELETEWALLET:", error);
     return { success: false, message: "Error deleting wallet" };
   }
 }

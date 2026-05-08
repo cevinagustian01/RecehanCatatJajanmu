@@ -2,9 +2,9 @@
 
 import * as React from "react";
 import { format, isWithinInterval, startOfDay, endOfDay } from "date-fns";
-import { Calendar as CalendarIcon, Download, ArrowUpRight, ArrowDownLeft, Trash2, Edit2 } from "lucide-react";
+import { Calendar as CalendarIcon, Download, ArrowUpRight, ArrowDownLeft, RefreshCw } from "lucide-react";
 import * as xlsx from "xlsx";
-import { deleteTransaction } from "@/app/actions/transactions";
+import { deleteTransaction, fetchTransactionsByDate } from "@/app/actions/transactions";
 import { DateRange } from "react-day-picker";
 import TransactionActions from "@/components/transactions/TransactionActions";
 
@@ -60,27 +60,49 @@ const statusCls: Record<string, string> = {
   failed: "bg-red-50 text-red-700 border-red-200",
 };
 
-export default function PaymentHistory({ initialData = [] }: { initialData?: Transaction[] }) {
+export default function PaymentHistory({ 
+  initialData = [],
+  initialStartDate,
+  initialEndDate,
+}: { 
+  initialData?: Transaction[];
+  initialStartDate?: string;
+  initialEndDate?: string;
+}) {
   const [data, setData] = React.useState<Transaction[]>(initialData);
   const [isLoading, setIsLoading] = React.useState(false);
 
-  React.useEffect(() => {
-    setData(initialData);
-  }, [initialData]);
-
-  // Compute dynamic filters based on real data
-  const CATEGORIES = React.useMemo(() => Array.from(new Set(data.map(t => t.category))), [data]);
-  const WALLETS = React.useMemo(() => Array.from(new Set(data.map(t => t.wallet))), [data]);
-
+  // Initialize date range from server data so UI matches data initially displayed
+  const now = new Date();
+  const defaultFrom = initialStartDate ? new Date(initialStartDate) : startOfDay(new Date(now.getFullYear(), now.getMonth(), 1));
+  const defaultTo = initialEndDate ? new Date(initialEndDate) : endOfDay(new Date(now.getFullYear(), now.getMonth() + 1, 0));
   
-  // Filters
-  const [dateRange, setDateRange] = React.useState<DateRange | undefined>();
+  const [dateRange, setDateRange] = React.useState<DateRange | undefined>(
+    { from: defaultFrom, to: defaultTo }
+  );
   const [categoryFilter, setCategoryFilter] = React.useState<string>("all");
   const [walletFilter, setWalletFilter] = React.useState<string>("all");
   
   // Pagination
   const [currentPage, setCurrentPage] = React.useState(1);
   const itemsPerPage = 10;
+
+  // Compute dynamic filters based on real data
+  const CATEGORIES = React.useMemo(() => Array.from(new Set(data.map(t => t.category))), [data]);
+  const WALLETS = React.useMemo(() => Array.from(new Set(data.map(t => t.wallet))), [data]);
+
+  // Fetch fresh data from server when date range changes
+  const fetchData = React.useCallback(async (start: Date, end: Date) => {
+    setIsLoading(true);
+    try {
+      const result = await fetchTransactionsByDate(start, end);
+      setData(result.transactions);
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   // Apply filters
   const filteredData = React.useMemo(() => {
@@ -115,9 +137,16 @@ export default function PaymentHistory({ initialData = [] }: { initialData?: Tra
     return filteredData.slice(startIndex, startIndex + itemsPerPage);
   }, [filteredData, currentPage]);
 
-  const handleDateRangeChange = (range: DateRange | undefined) => {
+  const handleDateRangeChange = async (range: DateRange | undefined) => {
     setDateRange(range);
     setCurrentPage(1);
+    
+    // Fetch fresh data from server when date range changes
+    if (range?.from) {
+      const from = startOfDay(range.from);
+      const to = range.to ? endOfDay(range.to) : endOfDay(range.from);
+      await fetchData(from, to);
+    }
   };
 
   const handleCategoryChange = (val: string | null) => {
@@ -135,10 +164,12 @@ export default function PaymentHistory({ initialData = [] }: { initialData?: Tra
   };
 
   const clearFilters = () => {
-    setDateRange(undefined);
+    setDateRange({ from: defaultFrom, to: defaultTo });
     setCategoryFilter("all");
     setWalletFilter("all");
     setCurrentPage(1);
+    // Refresh with default range
+    fetchData(defaultFrom, defaultTo);
   };
 
   const handleExportExcel = () => {
@@ -158,6 +189,7 @@ export default function PaymentHistory({ initialData = [] }: { initialData?: Tra
     xlsx.writeFile(workbook, "Transaksi_Keuangan.xlsx");
   };
 
+
   const handleDelete = async (id: string) => {
     if (!window.confirm("Yakin mau hapus transaksi ini? Saldo dompet akan dihitung ulang.")) return;
     
@@ -166,10 +198,18 @@ export default function PaymentHistory({ initialData = [] }: { initialData?: Tra
       const res = await deleteTransaction(id);
       if (!res.success) {
         alert(res.message);
+      } else {
+        setData(prev => prev.filter(tx => tx.id !== id));
+        // Refresh current view
+        if (dateRange?.from) {
+          const from = startOfDay(dateRange.from);
+          const to = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
+          await fetchData(from, to);
+        }
       }
     } catch (e) {
       console.error(e);
-      alert("Gagal menghapus transaksi.");
+      alert("Gagal menghapus transaksi");
     } finally {
       setIsLoading(false);
     }
@@ -183,15 +223,33 @@ export default function PaymentHistory({ initialData = [] }: { initialData?: Tra
           <p className="mt-0.5 text-sm text-slate-500">Interactive analytics table</p>
         </div>
         
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleExportExcel}
-          className="text-slate-600 hover:text-emerald-700 hover:border-emerald-200 hover:bg-emerald-50"
-        >
-          <Download className="mr-2 h-4 w-4" />
-          Export Excel
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => {
+              if (dateRange?.from) {
+                fetchData(
+                  startOfDay(dateRange.from),
+                  dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from)
+                );
+              }
+            }}
+            className="text-slate-600 hover:text-emerald-700 hover:border-emerald-200 hover:bg-emerald-50"
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Refresh
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleExportExcel}
+            className="text-slate-600 hover:text-emerald-700 hover:border-emerald-200 hover:bg-emerald-50"
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Export Excel
+          </Button>
+        </div>
       </div>
 
       {/* Filters Section */}
@@ -368,7 +426,6 @@ export default function PaymentHistory({ initialData = [] }: { initialData?: Tra
                 />
               </PaginationItem>
               
-              {/* Simple pagination logic for demo */}
               {[...Array(Math.min(5, totalPages))].map((_, i) => {
                 let pageNum = i + 1;
                 if (totalPages > 5 && currentPage > 3) {

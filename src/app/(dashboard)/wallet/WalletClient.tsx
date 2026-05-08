@@ -5,12 +5,25 @@ import { addWallet, updateWallet, deleteWallet } from "@/app/actions/wallets";
 import { formatRupiah } from "@/lib/utils";
 import { MoreVertical, Plus, Edit2, Trash2, Wallet as WalletIcon, X, Loader2, AlertTriangle } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useBalanceVisibility } from "@/components/dashboard/BalanceVisibilityContext";
 
-type WalletData = { id: string, wallet_name: string, current_balance: number, _count: { transactions: number } };
+type WalletData = { 
+  id: string, 
+  wallet_name: string, 
+  balance: number,
+  color?: string | null,
+  cardNumber?: string | null,
+  expiryDate?: string | null,
+  cardHolder?: string | null,
+  cardType?: string | null,
+  type?: string | null,
+  _count: { transactions: number } 
+};
 
 export default function WalletClient({ initialWallets }: { initialWallets: WalletData[] }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const { showBalance } = useBalanceVisibility();
 
   // Modals state
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -44,10 +57,13 @@ export default function WalletClient({ initialWallets }: { initialWallets: Walle
     e.preventDefault();
     if (!name.trim()) return;
     setLoading(true);
-    
-    const initialBal = parseInt(balance.replace(/[^0-9]/g, '')) || 0;
-    const res = await addWallet({ name, initialBalance: initialBal });
-    
+
+    const initialBal = parseInt((balance ?? "").toString().replace(/[^0-9]/g, ""), 10) || 0;
+    const formData = { name, balance: initialBal };
+
+    console.log("FORM DATA:", formData);
+    const res = await addWallet(formData);
+
     setLoading(false);
     if (res.success) {
       setIsAddOpen(false);
@@ -62,7 +78,7 @@ export default function WalletClient({ initialWallets }: { initialWallets: Walle
     if (!name.trim() || !selectedWallet) return;
     setLoading(true);
     
-    const res = await updateWallet(selectedWallet.id, name);
+    const res = await updateWallet(selectedWallet.id, { name });
     
     setLoading(false);
     if (res.success) {
@@ -131,7 +147,9 @@ export default function WalletClient({ initialWallets }: { initialWallets: Walle
             
             <div className="mt-6">
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Current Balance</p>
-              <p className="mt-1 text-2xl font-bold text-slate-900">{formatRupiah(w.current_balance)}</p>
+              <p className="mt-1 text-2xl font-bold text-slate-900">
+                 {showBalance ? formatRupiah(w.balance) : "Rp •••••••"}
+              </p>
             </div>
           </div>
         ))}

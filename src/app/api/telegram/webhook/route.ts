@@ -65,14 +65,14 @@ export async function POST(req: NextRequest): Promise<Response> {
         }
 
         const newBalance = String(lastTx.type).toUpperCase() === 'INCOME' 
-          ? lastTx.wallet.current_balance - lastTx.amount
-          : lastTx.wallet.current_balance + lastTx.amount;
+          ? lastTx.wallet.balance - lastTx.amount
+          : lastTx.wallet.balance + lastTx.amount;
 
         await prisma.$transaction([
           prisma.transaction.delete({ where: { id: lastTx.id } }),
           prisma.wallet.update({
             where: { id: lastTx.walletId },
-            data: { current_balance: newBalance }
+            data: { balance: newBalance }
           })
         ]);
 
@@ -133,6 +133,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         update: {},
         create: {
           telegram_id: chatId,
+          email: "unknown@example.com",
           monthly_budget: 1000,
           daily_income: 100,
           persona_mode: "Therapist"
@@ -146,7 +147,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         });
         
         if (queryWallet) {
-          walletBalance = queryWallet.current_balance;
+          walletBalance = queryWallet.balance;
         }
 
         const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
@@ -176,7 +177,7 @@ export async function POST(req: NextRequest): Promise<Response> {
 
       if (!wallet) {
         wallet = await prisma.wallet.create({
-          data: { userId: user.id, wallet_name: wallet_name, current_balance: 0 }
+          data: { userId: user.id, wallet_name: wallet_name, balance: 0 }
         });
       }
 
@@ -190,10 +191,10 @@ export async function POST(req: NextRequest): Promise<Response> {
         }
       });
 
-      newBalance = type === "INCOME" ? wallet.current_balance + amount : wallet.current_balance - amount;
+      newBalance = type === "INCOME" ? wallet.balance + amount : wallet.balance - amount;
       await prisma.wallet.update({
         where: { id: wallet.id },
-        data: { current_balance: newBalance }
+        data: { balance: newBalance }
       });
       
     } catch (err: unknown) {
