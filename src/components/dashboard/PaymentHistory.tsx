@@ -96,7 +96,7 @@ export default function PaymentHistory({
     setIsLoading(true);
     try {
       const result = await fetchTransactionsByDate(start, end);
-      setData(result.transactions);
+      setData(result.transactions as Transaction[]);
     } catch (error) {
       console.error("Error fetching transactions:", error);
     } finally {
