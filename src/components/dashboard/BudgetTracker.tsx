@@ -2,6 +2,7 @@ import { formatRupiah } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/categories";
 import { Target } from "lucide-react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 type BudgetProgress = {
   category: string;
@@ -25,20 +26,20 @@ export default function BudgetTracker({ items }: { items: BudgetProgress[] }) {
   if (items.length === 0) return null;
 
   return (
-    <div className="rounded-2xl bg-white p-6 ring-1 ring-slate-100 shadow-sm">
-      <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-inner">
-            <Target className="h-5 w-5 text-white" />
+    <div className="bg-white/70 backdrop-blur-md border border-white/20 rounded-[24px] p-8 shadow-[0_8px_32px_0_rgba(0,0,0,0.05)]">
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-black text-white shadow-lg">
+            <Target className="h-6 w-6" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-slate-900">Budget Tracker</h3>
-            <p className="text-xs text-slate-500">Monthly spending vs limits</p>
+            <h3 className="text-[17px] font-bold text-[#1D1D1F] tracking-tight">Budget Tracker</h3>
+            <p className="text-[13px] text-[#86868b] font-medium tracking-tight">Monthly spending vs limits</p>
           </div>
         </div>
         <Link 
           href="/settings/budget" 
-          className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
+          className="text-[13px] font-bold text-[#007AFF] hover:underline transition-all tracking-tight"
         >
           Manage →
         </Link>
@@ -51,20 +52,26 @@ export default function BudgetTracker({ items }: { items: BudgetProgress[] }) {
 
           return (
             <div key={item.category}>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-semibold text-slate-700">{getCategoryLabel(item.category)}</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-500">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[14px] font-bold text-[#1D1D1F] tracking-tight">{getCategoryLabel(item.category)}</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-[12px] font-bold text-[#86868b] tracking-tight">
                     {formatRupiah(item.spent)} / {formatRupiah(item.limit)}
                   </span>
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${getBadgeColor(pct)}`}>
+                  <span className={cn(
+                    "text-[10px] font-bold px-2 py-0.5 rounded-full",
+                    pct >= 100 ? "bg-[#FF3B30] text-white" : "bg-[#34C759] text-white"
+                  )}>
                     {pct}%
                   </span>
                 </div>
               </div>
-              <div className="h-2.5 w-full rounded-full bg-slate-100 overflow-hidden">
+              <div className="h-[8px] w-full rounded-full bg-[#F5F5F7] overflow-hidden border border-gray-100/50">
                 <div 
-                  className={`h-full rounded-full transition-all duration-500 ease-out ${getBarColor(pct)}`}
+                  className={cn(
+                    "h-full rounded-full transition-all duration-700 ease-out",
+                    pct >= 100 ? "bg-[#FF3B30]" : "bg-[#34C759] shadow-[0_0_10px_rgba(52,199,89,0.3)]"
+                  )}
                   style={{ width: `${clampedPct}%` }}
                 />
               </div>

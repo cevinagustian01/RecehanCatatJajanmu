@@ -100,9 +100,14 @@ export async function updateWallet(id: string, data: {
       return { success: false, message: "Unauthenticated" };
     }
 
+    const user = await currentUser();
+    const email = user?.emailAddresses?.[0]?.emailAddress;
+    const synced = email ? await syncUser(userId, email) : null;
+    const localUserId = synced?.id ?? userId;
+
     // Verify ownership
     const existing = await prisma.wallet.findFirst({
-      where: { id, userId }
+      where: { id, userId: localUserId }
     });
     if (!existing) {
       return { success: false, message: "Wallet not found" };
@@ -139,9 +144,14 @@ export async function deleteWallet(id: string) {
       return { success: false, message: "Unauthenticated" };
     }
 
+    const user = await currentUser();
+    const email = user?.emailAddresses?.[0]?.emailAddress;
+    const synced = email ? await syncUser(userId, email) : null;
+    const localUserId = synced?.id ?? userId;
+
     // Verify ownership before deleting
     const wallet = await prisma.wallet.findFirst({
-      where: { id, userId }
+      where: { id, userId: localUserId }
     });
     if (!wallet) {
       return { success: false, message: "Wallet not found" };

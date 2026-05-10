@@ -66,23 +66,23 @@ export default function CashflowChart({ initialData }: { initialData?: ChartData
   }, [period, loadData]);
 
   return (
-    <div className="rounded-2xl bg-white p-6 ring-1 ring-slate-100 shadow-sm">
-      <div className="flex items-center justify-between">
+    <div className="bg-white/70 backdrop-blur-md border border-white/20 rounded-[24px] p-8 shadow-[0_8px_32px_0_rgba(0,0,0,0.05)]">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h3 className="text-base font-bold text-slate-900">Cashflow Overview</h3>
-          <p className="mt-0.5 text-sm text-slate-500">
+          <h3 className="text-[17px] font-bold text-[#1D1D1F] tracking-tight">Cashflow Overview</h3>
+          <p className="mt-0.5 text-[13px] text-[#86868b] font-medium tracking-tight">
             {period === "yearly" ? "This Year" : period === "monthly" ? "This Month" : "Last 7 Days"}
           </p>
         </div>
-        <div className="flex gap-1 rounded-xl bg-slate-100 p-1">
+        <div className="flex gap-1 rounded-full bg-[#F5F5F7] p-1.5 border border-gray-100">
           {(["weekly", "monthly", "yearly"] as ChartPeriod[]).map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold capitalize transition-all duration-200 ${
+              className={`rounded-full px-5 py-2 text-[12px] font-bold capitalize transition-all duration-300 tracking-tight ${
                 period === p
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
+                  ? "bg-white text-black shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
+                  : "text-[#86868b] hover:text-[#1D1D1F]"
               }`}
             >
               {p}
@@ -91,29 +91,30 @@ export default function CashflowChart({ initialData }: { initialData?: ChartData
         </div>
       </div>
 
-      <div className="mt-6 h-[280px]" style={{ minWidth: 0, minHeight: 0 }}>
+      <div className="mt-8 h-[300px] lg:h-[450px] aspect-auto min-w-[300px]" style={{ minWidth: 0, minHeight: 0 }}>
         {isLoading ? (
           <div className="flex h-full items-center justify-center">
             <div className="w-8 h-8 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-            <BarChart data={data} barGap={4} barCategoryGap="20%">
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+            <BarChart data={data} barGap={6} barCategoryGap="25%">
+              <CartesianGrid strokeDasharray="0" vertical={false} stroke="#E5E5E7" />
               <XAxis dataKey="name" axisLine={false} tickLine={false}
-                tick={{ fill: "#94a3b8", fontSize: 12, fontWeight: 500 }} />
+                tick={{ fill: "#86868B", fontSize: 11, fontWeight: 600 }}
+                interval="preserveStartEnd"
+                minTickGap={10} />
               <YAxis axisLine={false} tickLine={false}
-                tick={{ fill: "#94a3b8", fontSize: 12, fontWeight: 500 }}
+                tick={{ fill: "#86868B", fontSize: 11, fontWeight: 600 }}
                 tickFormatter={(v) => `Rp${(v / 1000).toFixed(0)}k`} />
-              <Tooltip 
-                content={<CustomTooltip />} 
-                cursor={{ stroke: '#cbd5e1', strokeWidth: 2, fill: 'transparent', strokeDasharray: '4 4' }} 
-                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} 
-              />
-              <Legend iconType="circle" iconSize={8}
-                wrapperStyle={{ paddingTop: "16px", fontSize: "12px", fontWeight: 500 }} />
-              <Bar dataKey="income" fill="#10b981" radius={[6, 6, 0, 0]} name="Income" />
-              <Bar dataKey="expenses" fill="#ef4444" radius={[6, 6, 0, 0]} name="Expenses" />
+                <Tooltip 
+                  content={<CustomTooltip />} 
+                  cursor={{ fill: 'rgba(0,0,0,0.02)' }}
+                />
+              <Legend iconType="circle" iconSize={10}
+                wrapperStyle={{ paddingTop: "24px", fontSize: "13px", fontWeight: 600, color: "#1D1D1F" }} />
+              <Bar dataKey="income" fill="#007AFF" radius={[10, 10, 0, 0]} name="Income" />
+              <Bar dataKey="expenses" fill="#E5E5E7" radius={[10, 10, 0, 0]} name="Expenses" />
             </BarChart>
           </ResponsiveContainer>
         )}

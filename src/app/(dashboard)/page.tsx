@@ -1,8 +1,10 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { syncUser } from "@/lib/sync-user";
 import WalletCard from "@/components/dashboard/WalletCard";
+import AIFinanceAdvisor from "@/components/dashboard/AIFinanceAdvisor";
+import FinancialHealth from "@/components/dashboard/FinancialHealth";
 import CashflowChart from "@/components/dashboard/CashflowChart";
-import PaymentHistory from "@/components/dashboard/PaymentHistory";
+import RecentTransactions from "@/components/dashboard/RecentTransactions";
 import DashboardFilter from "@/components/dashboard/DashboardFilter";
 import BudgetTracker from "@/components/dashboard/BudgetTracker";
 import { getBudgetsWithSpent } from "@/actions/budget-actions";
@@ -32,10 +34,20 @@ export default async function Home(props: {
   if (!localUserId) {
     return (
       <>
-        <DashboardFilter wallets={[]} currentTimeRange={timeRange} currentWallet={wallet} />
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 mt-6">
+        <div className="mt-2 mb-6">
+          <DashboardFilter wallets={[]} currentTimeRange={timeRange} currentWallet={wallet} />
+        </div>
+        <div className="mb-8">
           <WalletCard totalBalance={0} income={0} expenses={0} />
-          <CashflowChart initialData={[]} />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+          <div className="lg:col-span-8 flex flex-col h-full">
+            <CashflowChart initialData={[]} />
+          </div>
+          <div className="lg:col-span-4 flex flex-col gap-6">
+            <FinancialHealth income={0} expenses={0} />
+            <AIFinanceAdvisor />
+          </div>
         </div>
         <div className="mt-6">
           <BudgetTracker items={[]} />
@@ -82,20 +94,29 @@ export default async function Home(props: {
   const budgetItems = await getBudgetsWithSpent();
   return (
     <>
-      <DashboardFilter wallets={uniqueWallets} currentTimeRange={timeRange} currentWallet={wallet} />
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 mt-6">
-        <WalletCard totalBalance={totalBalance} income={income} expenses={expenses} />
-        <CashflowChart initialData={initialChartData} />
+      <div className="mt-2 mb-6">
+        <DashboardFilter wallets={uniqueWallets} currentTimeRange={timeRange} currentWallet={wallet} />
       </div>
+      
+      <div className="mb-8">
+        <WalletCard totalBalance={totalBalance} income={income} expenses={expenses} />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
+        <div className="lg:col-span-8 flex flex-col h-full">
+          <CashflowChart initialData={initialChartData} />
+        </div>
+        <div className="lg:col-span-4 flex flex-col gap-6">
+          <FinancialHealth income={income} expenses={expenses} />
+          <AIFinanceAdvisor />
+        </div>
+      </div>
+
       <div className="mt-6">
         <BudgetTracker items={budgetItems} />
       </div>
       <div className="mt-6 w-full max-w-full">
-        <PaymentHistory 
-          initialData={tableData} 
-          initialStartDate={startDate.toISOString()}
-          initialEndDate={endDate.toISOString()}
-        />
+        <RecentTransactions transactions={tableData} />
       </div>
     </>
   );

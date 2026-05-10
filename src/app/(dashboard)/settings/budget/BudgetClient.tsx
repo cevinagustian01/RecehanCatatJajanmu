@@ -83,7 +83,7 @@ export default function BudgetClient({ initialBudgets }: { initialBudgets: Budge
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {initialBudgets.map(b => (
-            <div key={b.id} className="group relative rounded-2xl bg-white p-5 ring-1 ring-slate-100 shadow-sm transition-all hover:shadow-md hover:ring-slate-200">
+            <div key={b.id} className="group relative bg-white border border-gray-200 rounded-2xl p-5 shadow-sm transition-all hover:shadow-md hover:border-emerald-500">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-inner">

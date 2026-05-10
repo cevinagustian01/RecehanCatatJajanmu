@@ -108,6 +108,11 @@ export async function addTransaction(data: {
     }
 
     // Validate amount
+    // Credit check
+    if (synced && synced.credits <= 0) {
+      return { success: false, message: "Kredit Anda habis. Silakan upgrade plan untuk menambah transaksi." };
+    }
+
     const amountNum = Number(data.amount);
     if (Number.isNaN(amountNum) || amountNum <= 0) {
       return { success: false, message: "Invalid amount" };
@@ -171,6 +176,7 @@ export async function addTransaction(data: {
           created_at: createdAt,
         }
       }),
+
       prisma.wallet.update({
         where: { id: data.walletId },
         data: { balance: newBalance }
@@ -179,6 +185,12 @@ export async function addTransaction(data: {
 
     revalidatePath("/");
     revalidatePath("/analytics");
+    try {
+      await (prisma.user as any).update({
+        where: { id: localUserId },
+        data: { credits: { decrement: 1 } }
+      });
+    } catch (e) {}
     return { success: true };
   } catch (error) {
     console.error("TRANSACTION PRISMA ERROR:", error);
@@ -188,7 +200,14 @@ export async function addTransaction(data: {
     } else {
       console.error(error);
     }
-    return { success: false, message: "Gagal nyimpen transaksi" };
+    let message = "Gagal nyimpen transaksi";
+    if (error instanceof Error) {
+      message = error.message;
+      if (message.includes("credits")) {
+        message = "Kredit tidak ditemukan pada model User. Silakan jalankan 'npx prisma generate'.";
+      }
+    }
+    return { success: false, message };
   }
 }
 

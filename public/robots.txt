@@ -1,0 +1,28 @@
+# Allow all search engines to crawl public pages
+User-agent: *
+Allow: /sign-in
+Allow: /sign-up
+
+# Disallow all private/dashboard routes
+Disallow: /admin/
+Disallow: /wallet/
+Disallow: /transactions/
+Disallow: /analytics/
+Disallow: /budget/
+Disallow: /settings/
+Disallow: /settings/budget/
+
+
+# Disallow all API routes (they are internal)
+Disallow: /api/
+
+# Disallow PWA manifest info disclosure
+Disallow: /manifest.json
+
+# Allow crawling of static assets
+Allow: /_next/static/
+Allow: /icon-192x192.png
+Allow: /icon-512x512.png
+
+# Crawl delay for lighter server load
+Crawl-delay: 1

@@ -23,53 +23,57 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
-export default function CategoryPieChart({ data }: { data: CategoryData[] }) {
+export default function CategoryPieChart({ data, hideContainer = false }: { data: CategoryData[], hideContainer?: boolean }) {
   if (!data || data.length === 0) {
+    if (hideContainer) return (
+      <div className="flex h-full items-center justify-center">
+        <p className="text-sm text-gray-400 font-bold uppercase tracking-widest">No Data Available</p>
+      </div>
+    );
     return (
-      <div className="flex h-[350px] items-center justify-center rounded-2xl bg-slate-50 ring-1 ring-slate-100">
-        <p className="text-sm text-slate-500 font-medium">Belum ada data pengeluaran.</p>
+      <div className="flex h-[350px] items-center justify-center bg-white/50 backdrop-blur-md border border-white/20 rounded-[24px] shadow-sm">
+        <p className="text-sm text-gray-400 font-bold uppercase tracking-widest">No Data Available</p>
       </div>
     );
   }
 
-  return (
-    <div className="rounded-2xl bg-white p-6 ring-1 ring-slate-100 shadow-sm flex flex-col">
-      <div>
-        <h3 className="text-base font-bold text-slate-900">Pengeluaran per Kategori</h3>
-        <p className="mt-0.5 text-sm text-slate-500">Distribusi pengeluaran dari seluruh transaksi</p>
-      </div>
+  const content = (
+    <div className="flex-1 h-[300px] w-full" style={{ minWidth: 0, minHeight: 0 }}>
+      <ResponsiveContainer width="100%" height={300}>
+        <PieChart>
+          <Pie
+            data={data}
+            cx="50%"
+            cy="50%"
+            innerRadius={80}
+            outerRadius={110}
+            paddingAngle={4}
+            dataKey="amount"
+            nameKey="category"
+            stroke="none"
+          >
+            {data.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} className="outline-none" />
+            ))}
+          </Pie>
+          <Tooltip 
+            content={<CustomTooltip />} 
+            cursor={{ fill: 'transparent' }} 
+          />
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
+  );
 
-      <div className="mt-6 flex-1 h-[300px] w-full" style={{ minWidth: 0, minHeight: 0 }}>
-        <ResponsiveContainer width="100%" height={300}>
-          <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              innerRadius={80}
-              outerRadius={110}
-              paddingAngle={2}
-              dataKey="amount"
-              nameKey="category"
-            >
-              {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip 
-              content={<CustomTooltip />} 
-              cursor={{ fill: 'transparent' }} 
-              contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} 
-            />
-            <Legend 
-              verticalAlign="bottom" 
-              height={36}
-              iconType="circle"
-              wrapperStyle={{ fontSize: "12px", fontWeight: 500 }}
-            />
-          </PieChart>
-        </ResponsiveContainer>
+  if (hideContainer) return content;
+
+  return (
+    <div className="bg-white/50 backdrop-blur-md border border-white/20 rounded-[24px] p-8 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)] flex flex-col">
+      <div className="mb-8">
+        <h3 className="text-lg font-bold text-gray-900 tracking-tight">Spending Breakdown</h3>
+        <p className="mt-1 text-xs text-gray-400 font-bold uppercase tracking-widest">Distribusi pengeluaran saat ini</p>
       </div>
+      {content}
     </div>
   );
 }

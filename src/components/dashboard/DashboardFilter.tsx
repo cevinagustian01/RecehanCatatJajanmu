@@ -29,21 +29,23 @@ export default function DashboardFilter({ wallets, currentTimeRange, currentWall
   const walletLabel = currentWallet === "all" ? "Semua Dompet" : currentWallet;
 
   return (
-    <div className="grid grid-cols-2 gap-3 md:flex md:items-center">
+    <div className="flex flex-row items-center gap-2 w-full max-w-full overflow-x-auto no-scrollbar pb-2 mb-8 animate-in fade-in slide-in-from-top-2 duration-700">
       <Select 
         value={currentTimeRange} 
         onValueChange={(val) => router.push(pathname + "?" + createQueryString("timeRange", val || ""))}
       >
-        <SelectTrigger className="w-full md:w-auto bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-100 focus:ring-2 focus:ring-emerald-500 transition-colors">
-          <div className="flex items-center gap-2 truncate">
-            <Calendar className="h-4 w-4 shrink-0 text-slate-500" />
-            <SelectValue placeholder="Pilih Waktu">{timeRangeLabel}</SelectValue>
+        <SelectTrigger className="flex-1 min-w-[140px] bg-white/50 backdrop-blur-md border border-white/20 rounded-2xl px-4 py-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:bg-white hover:shadow-md transition-all h-12 focus:ring-0">
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-2.5 truncate">
+              <Calendar className="h-4 w-4 shrink-0 text-emerald-500" />
+              <span className="text-[13px] font-bold text-gray-800 tracking-tight">{timeRangeLabel}</span>
+            </div>
           </div>
         </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="thisMonth">Bulan Ini</SelectItem>
-          <SelectItem value="lastMonth">Bulan Lalu</SelectItem>
-          <SelectItem value="all">Semua Waktu</SelectItem>
+        <SelectContent className="rounded-[24px] border border-white/40 bg-white/90 backdrop-blur-xl shadow-2xl p-1 animate-in zoom-in-95 duration-200">
+          <SelectItem value="thisMonth" className="rounded-xl font-bold py-2.5">Bulan Ini</SelectItem>
+          <SelectItem value="lastMonth" className="rounded-xl font-bold py-2.5">Bulan Lalu</SelectItem>
+          <SelectItem value="all" className="rounded-xl font-bold py-2.5">Semua Waktu</SelectItem>
         </SelectContent>
       </Select>
 
@@ -51,16 +53,18 @@ export default function DashboardFilter({ wallets, currentTimeRange, currentWall
         value={currentWallet} 
         onValueChange={(val) => router.push(pathname + "?" + createQueryString("wallet", val || ""))}
       >
-        <SelectTrigger className="w-full md:w-auto bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-100 focus:ring-2 focus:ring-emerald-500 transition-colors">
-          <div className="flex items-center gap-2 truncate">
-            <CreditCard className="h-4 w-4 shrink-0 text-slate-500" />
-            <SelectValue placeholder="Pilih Dompet">{walletLabel}</SelectValue>
+        <SelectTrigger className="flex-1 min-w-[140px] bg-white/50 backdrop-blur-md border border-white/20 rounded-2xl px-4 py-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:bg-white hover:shadow-md transition-all h-12 focus:ring-0">
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-2.5 truncate">
+              <CreditCard className="h-4 w-4 shrink-0 text-blue-500" />
+              <span className="text-[13px] font-bold text-gray-800 tracking-tight">{walletLabel}</span>
+            </div>
           </div>
         </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Semua Dompet</SelectItem>
+        <SelectContent className="rounded-[24px] border border-white/40 bg-white/90 backdrop-blur-xl shadow-2xl p-1 animate-in zoom-in-95 duration-200">
+          <SelectItem value="all" className="rounded-xl font-bold py-2.5">Semua Dompet</SelectItem>
           {wallets.map(w => (
-            <SelectItem key={w} value={w}>{w}</SelectItem>
+            <SelectItem key={w} value={w} className="rounded-xl font-bold py-2.5">{w}</SelectItem>
           ))}
         </SelectContent>
       </Select>

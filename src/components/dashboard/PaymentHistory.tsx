@@ -216,7 +216,7 @@ export default function PaymentHistory({
   };
 
   return (
-    <div className="rounded-2xl bg-white p-6 ring-1 ring-slate-100 shadow-sm">
+    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <h3 className="text-lg font-bold text-slate-900">Payment History</h3>
@@ -360,7 +360,7 @@ export default function PaymentHistory({
                       )}>
                         {tx.type === "credit" ? <ArrowDownLeft className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
                       </div>
-                      <span className="truncate max-w-[200px] block">{tx.name}</span>
+                      <span className="truncate max-w-[120px] xs:max-w-[150px] sm:max-w-[200px] block">{tx.name}</span>
                     </div>
                   </TableCell>
                   <TableCell className="text-slate-500">{tx.category}</TableCell>

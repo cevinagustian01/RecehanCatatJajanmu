@@ -36,6 +36,11 @@ model User {
   connectWhatsApp   Boolean @default(false)
   connectTelegram   Boolean @default(false)
 
+  // Credits & Subscription
+  credits           Int      @default(10)
+  maxCredits        Int      @default(10)
+  subscriptionPlan  String   @default("FREE") // FREE or PRO
+
   // Notifications (Settings page)
   notifyTransactionAlerts Boolean @default(false)
   notifyWeeklyReports     Boolean @default(false)

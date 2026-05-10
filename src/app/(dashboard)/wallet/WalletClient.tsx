@@ -6,6 +6,7 @@ import { formatRupiah } from "@/lib/utils";
 import { MoreVertical, Plus, Edit2, Trash2, Wallet as WalletIcon, X, Loader2, AlertTriangle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useBalanceVisibility } from "@/components/dashboard/BalanceVisibilityContext";
+import { toast } from "sonner";
 
 type WalletData = { 
   id: string, 
@@ -67,9 +68,10 @@ export default function WalletClient({ initialWallets }: { initialWallets: Walle
     setLoading(false);
     if (res.success) {
       setIsAddOpen(false);
+      toast.success("Dompet berhasil ditambahkan");
       router.refresh();
     } else {
-      alert(res.message);
+      toast.error(res.message || "Gagal menambahkan dompet");
     }
   };
 
@@ -83,9 +85,10 @@ export default function WalletClient({ initialWallets }: { initialWallets: Walle
     setLoading(false);
     if (res.success) {
       setIsEditOpen(false);
+      toast.success("Perubahan berhasil disimpan");
       router.refresh();
     } else {
-      alert(res.message);
+      toast.error(res.message || "Gagal memperbarui dompet");
     }
   };
 
@@ -98,56 +101,65 @@ export default function WalletClient({ initialWallets }: { initialWallets: Walle
     setLoading(false);
     if (res.success) {
       setIsDeleteOpen(false);
+      toast.success("Dompet berhasil dihapus");
       router.refresh();
     } else {
-      alert(res.message);
+      toast.error(res.message || "Gagal menghapus dompet");
     }
   };
 
   return (
     <>
-      <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Wallet Management</h1>
-          <p className="text-sm text-slate-500 mt-1">Manage your accounts, cards, and cash wallets.</p>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Wallet Management</h1>
+          <p className="text-sm text-[#86868b] mt-1 font-medium tracking-tight">Manage your accounts, cards, and cash wallets.</p>
         </div>
         
         <button 
           onClick={openAdd}
-          className="flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-200 transition-all hover:bg-emerald-600 hover:shadow-xl hover:shadow-emerald-200 w-full justify-center md:w-auto"
+          className="flex items-center gap-2 rounded-full bg-black px-6 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:opacity-80 w-fit"
         >
           <Plus className="h-4 w-4" />
           Add New Wallet
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {initialWallets.map(w => (
-          <div key={w.id} className="group relative overflow-hidden rounded-2xl bg-white p-5 ring-1 ring-slate-100 shadow-sm transition-all hover:shadow-md hover:ring-slate-200">
+          <div key={w.id} className="group relative bg-white border border-white/20 rounded-[24px] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300">
             <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-inner">
-                  <WalletIcon className="h-6 w-6 text-white" />
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-50 text-emerald-600 shadow-inner">
+                  <WalletIcon className="h-6 w-6" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900">{w.wallet_name}</h3>
-                  <p className="text-xs text-slate-500">{w._count.transactions} transactions</p>
+                  <h3 className="text-lg font-bold text-gray-900 tracking-tight leading-tight">{w.wallet_name}</h3>
+                  <p className="text-[12px] text-[#86868b] font-semibold tracking-tight mt-0.5">{w._count.transactions} transactions</p>
                 </div>
               </div>
               
-              <div className="flex items-center gap-1">
-                <button onClick={() => openEdit(w)} className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-50 hover:text-emerald-600 focus:outline-none" title="Edit Wallet">
+              <div className="absolute top-6 right-6 flex items-center gap-1.5">
+                <button 
+                  onClick={() => openEdit(w)} 
+                  className="p-2 rounded-xl bg-gray-50/50 backdrop-blur-sm border border-gray-100 text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-all" 
+                  title="Edit Wallet"
+                >
                   <Edit2 className="h-4 w-4" />
                 </button>
-                <button onClick={() => openDelete(w)} className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 focus:outline-none" title="Delete Wallet">
+                <button 
+                  onClick={() => openDelete(w)} 
+                  className="p-2 rounded-xl bg-gray-50/50 backdrop-blur-sm border border-gray-100 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all" 
+                  title="Delete Wallet"
+                >
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
             </div>
             
-            <div className="mt-6">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Current Balance</p>
-              <p className="mt-1 text-2xl font-bold text-slate-900">
+            <div className="mt-10">
+              <p className="text-[10px] font-bold text-[#86868b] uppercase tracking-widest mb-1">Current Balance</p>
+              <p className="text-2xl font-bold text-gray-900 tracking-tight">
                  {showBalance ? formatRupiah(w.balance) : "Rp •••••••"}
               </p>
             </div>
@@ -155,11 +167,16 @@ export default function WalletClient({ initialWallets }: { initialWallets: Walle
         ))}
 
         {initialWallets.length === 0 && (
-          <div className="col-span-full rounded-2xl border-2 border-dashed border-slate-200 p-12 text-center">
-            <WalletIcon className="mx-auto h-12 w-12 text-slate-300" />
-            <h3 className="mt-4 text-lg font-bold text-slate-900">No wallets found</h3>
-            <p className="mt-1 text-sm text-slate-500">Create your first wallet to start tracking finances.</p>
-            <button onClick={openAdd} className="mt-6 text-sm font-semibold text-emerald-600 hover:text-emerald-700">
+          <div className="col-span-full rounded-[24px] border-2 border-dashed border-gray-200 p-16 text-center bg-gray-50/30">
+            <div className="mx-auto w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-sm mb-6">
+              <WalletIcon className="h-8 w-8 text-gray-300" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 tracking-tight">No wallets found</h3>
+            <p className="mt-2 text-[14px] text-[#86868b] font-medium tracking-tight">Create your first wallet to start tracking finances.</p>
+            <button 
+              onClick={openAdd} 
+              className="mt-8 bg-black text-white rounded-full px-8 py-3 text-sm font-bold shadow-md hover:opacity-80 transition-all"
+            >
               + Add Wallet Now
             </button>
           </div>
@@ -168,34 +185,39 @@ export default function WalletClient({ initialWallets }: { initialWallets: Walle
 
       {/* Add Modal */}
       {isAddOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl font-bold text-slate-900">New Wallet</h2>
-              <button onClick={() => setIsAddOpen(false)} className="rounded-full p-1.5 hover:bg-slate-100 text-slate-500 transition-colors">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/20 p-4 backdrop-blur-md">
+          <div className="w-full max-w-sm rounded-[32px] bg-white/90 backdrop-blur-xl border border-white/50 p-8 shadow-2xl animate-in fade-in zoom-in duration-300">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-xl font-bold text-gray-900 tracking-tight">New Wallet</h2>
+              <button onClick={() => setIsAddOpen(false)} className="rounded-full p-2 hover:bg-gray-100 text-gray-400 transition-colors">
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <form onSubmit={handleAddSubmit} className="space-y-4">
+            <form onSubmit={handleAddSubmit} className="space-y-6">
               <div>
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 block">Wallet Name</label>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Wallet Name</label>
                 <input 
                   type="text" value={name} onChange={(e) => setName(e.target.value)} required
                   placeholder="e.g., BCA, Cash, GoPay"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full rounded-2xl border-none bg-gray-50/50 px-5 py-4 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-black/5 transition-all outline-none"
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 block">Initial Balance (Rp)</label>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Initial Balance (Rp)</label>
                 <input 
                   type="number" value={balance} onChange={(e) => setBalance(e.target.value)}
-                  placeholder="e.g., 1000000 (Optional)"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  placeholder="e.g., 1000000"
+                  className="w-full rounded-2xl border-none bg-gray-50/50 px-5 py-4 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-black/5 transition-all outline-none"
                 />
               </div>
-              <button type="submit" disabled={loading} className="w-full flex justify-center items-center rounded-xl bg-emerald-500 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-600 disabled:opacity-70 mt-2">
-                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Create Wallet"}
-              </button>
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setIsAddOpen(false)} className="flex-1 rounded-full bg-white border border-gray-100 py-4 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all shadow-sm">
+                  Cancel
+                </button>
+                <button type="submit" disabled={loading} className="flex-2 flex justify-center items-center rounded-full bg-black py-4 px-8 text-sm font-bold text-white transition-all hover:opacity-80 disabled:opacity-50">
+                  {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Create Wallet"}
+                </button>
+              </div>
             </form>
           </div>
         </div>
@@ -203,25 +225,30 @@ export default function WalletClient({ initialWallets }: { initialWallets: Walle
 
       {/* Edit Modal */}
       {isEditOpen && selectedWallet && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl font-bold text-slate-900">Edit Wallet</h2>
-              <button onClick={() => setIsEditOpen(false)} className="rounded-full p-1.5 hover:bg-slate-100 text-slate-500 transition-colors">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/20 p-4 backdrop-blur-md">
+          <div className="w-full max-w-sm rounded-[32px] bg-white/90 backdrop-blur-xl border border-white/50 p-8 shadow-2xl animate-in fade-in zoom-in duration-300">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-xl font-bold text-gray-900 tracking-tight">Edit Wallet</h2>
+              <button onClick={() => setIsEditOpen(false)} className="rounded-full p-2 hover:bg-gray-100 text-gray-400 transition-colors">
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <form onSubmit={handleEditSubmit} className="space-y-4">
+            <form onSubmit={handleEditSubmit} className="space-y-6">
               <div>
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 block">Wallet Name</label>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Wallet Name</label>
                 <input 
                   type="text" value={name} onChange={(e) => setName(e.target.value)} required
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full rounded-2xl border-none bg-gray-50/50 px-5 py-4 text-gray-900 focus:ring-2 focus:ring-black/5 transition-all outline-none"
                 />
               </div>
-              <button type="submit" disabled={loading} className="w-full flex justify-center items-center rounded-xl bg-emerald-500 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-600 disabled:opacity-70 mt-2">
-                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Save Changes"}
-              </button>
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setIsEditOpen(false)} className="flex-1 rounded-full bg-white border border-gray-100 py-4 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all shadow-sm">
+                  Cancel
+                </button>
+                <button type="submit" disabled={loading} className="flex-2 flex justify-center items-center rounded-full bg-black py-4 px-8 text-sm font-bold text-white transition-all hover:opacity-80 disabled:opacity-50">
+                  {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Save Changes"}
+                </button>
+              </div>
             </form>
           </div>
         </div>
@@ -229,22 +256,22 @@ export default function WalletClient({ initialWallets }: { initialWallets: Walle
 
       {/* Delete Modal */}
       {isDeleteOpen && selectedWallet && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl animate-in fade-in zoom-in duration-200 text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100 mb-4">
-              <AlertTriangle className="h-8 w-8 text-red-600" />
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/20 p-4 backdrop-blur-md">
+          <div className="w-full max-w-sm rounded-[32px] bg-white/90 backdrop-blur-xl border border-white/50 p-10 shadow-2xl animate-in fade-in zoom-in duration-300 text-center">
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-red-50 mb-6 ring-1 ring-red-100">
+              <AlertTriangle className="h-10 w-10 text-red-500" />
             </div>
-            <h2 className="text-xl font-bold text-slate-900">Delete Wallet?</h2>
-            <p className="mt-2 text-sm text-slate-500">
-              Are you sure you want to delete <span className="font-bold text-slate-800">{selectedWallet.wallet_name}</span>? 
-              This will permanently delete all <b>{selectedWallet._count.transactions} transactions</b> associated with it. This action cannot be undone.
+            <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Delete Wallet?</h2>
+            <p className="mt-4 text-[14px] text-gray-500 font-medium leading-relaxed">
+              Are you sure you want to delete <span className="font-bold text-gray-900">{selectedWallet.wallet_name}</span>? 
+              This will permanently delete all <span className="text-gray-900 font-bold">{selectedWallet._count.transactions} transactions</span>.
             </p>
-            <div className="mt-6 flex gap-3">
-              <button onClick={() => setIsDeleteOpen(false)} className="flex-1 rounded-xl bg-slate-100 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-200">
-                Cancel
+            <div className="mt-10 flex flex-col gap-3">
+              <button onClick={handleDeleteSubmit} disabled={loading} className="w-full flex justify-center items-center rounded-full bg-red-500 py-4 text-sm font-bold text-white transition-all hover:bg-red-600 disabled:opacity-50 shadow-lg shadow-red-100">
+                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Confirm Delete"}
               </button>
-              <button onClick={handleDeleteSubmit} disabled={loading} className="flex-1 flex justify-center items-center rounded-xl bg-red-600 py-3 text-sm font-bold text-white transition-all hover:bg-red-700 disabled:opacity-70 shadow-lg shadow-red-200">
-                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Yes, Delete"}
+              <button onClick={() => setIsDeleteOpen(false)} className="w-full rounded-full bg-white border border-gray-100 py-4 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all">
+                Cancel
               </button>
             </div>
           </div>

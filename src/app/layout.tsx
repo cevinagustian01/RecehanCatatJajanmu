@@ -17,18 +17,30 @@ const inter = Inter({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#10b981",
+  themeColor: "#059669",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export const metadata: Metadata = {
-  title: "FinFlow — Financial Dashboard",
-  description:
-    "Modern financial dashboard for managing wallets, tracking cashflow, and monitoring transactions.",
+  title: "Domptt - Catat Uangmu",
+  description: "Apple Style Financial Tracker",
   manifest: "/manifest.json",
+  applicationName: "Domptt",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Catat Jajanmu",
+    title: "Domptt",
+  },
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon-32x32.png',
+    apple: '/apple-touch-icon.png',
+  },
+  formatDetection: {
+    telephone: false,
   },
 };
 

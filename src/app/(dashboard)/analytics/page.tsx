@@ -41,8 +41,7 @@ export default async function AnalyticsPage() {
           <CategoryPieChart data={chartData} />
         </div>
         
-        {/* Summary Card / List Component */}
-        <div className="rounded-2xl bg-white p-6 ring-1 ring-slate-100 shadow-sm lg:col-span-1">
+        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm lg:col-span-1">
           <h3 className="text-base font-bold text-slate-900 mb-6">Detail Kategori</h3>
           <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2">
             {chartData.length > 0 ? chartData.map((item, i) => {

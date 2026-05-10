@@ -8,19 +8,21 @@ import {
   Wallet,
   ArrowLeftRight,
   ChartBar,
-  Settings,
+  User as UserIcon,
+  Calendar,
   HelpCircle,
   LogOut,
   Target,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/" },
   { icon: Wallet, label: "My Wallet", href: "/wallet" },
-  { icon: ArrowLeftRight, label: "Transactions", href: "/transactions" },
-  { icon: ChartBar, label: "Analytics", href: "/analytics" },
+  { icon: Calendar, label: "Kalender", href: "/calendar" },
+  { icon: ChartBar, label: "Laporan Keuangan", href: "/transactions" },
   { icon: Target, label: "Budget", href: "/budget" },
-  { icon: Settings, label: "Settings", href: "/settings" },
+  { icon: UserIcon, label: "Profil", href: "/profile", sublabel: "Kelola Akun" },
 ];
 
 export default function Sidebar() {
@@ -37,20 +39,20 @@ export default function Sidebar() {
         />
       )}
       
-      <aside className="hidden md:fixed md:left-0 md:top-0 md:z-40 md:flex md:h-screen md:w-[260px] md:flex-col md:border-r md:border-slate-100 md:bg-white dark:md:border-slate-800 dark:md:bg-slate-950">
-      {/* Logo */}
-      <div className="flex items-center gap-3 px-6 py-7">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg shadow-emerald-200">
-          <Wallet className="h-5 w-5 text-white" />
-        </div>
-        <div>
-          <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
-            FinFlow
-          </h1>
-          <p className="text-[11px] font-medium tracking-wider text-slate-400 dark:text-slate-500 uppercase">
-            Finance Dashboard
-          </p>
-        </div>
+      <aside className={cn(
+        "fixed left-0 top-0 z-50 h-screen w-64 bg-white/70 backdrop-blur-xl border-r border-white/40 shadow-[0_8px_32px_0_rgba(0,0,0,0.02)] transition-transform md:translate-x-0 flex flex-col",
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
+      {/* Logo/Branding */}
+      <div className="px-6 py-8 flex items-center gap-3">
+        <img 
+          src="/logo-icon.png" 
+          alt="Domptt Logo" 
+          className="w-10 h-10 object-contain animate-in fade-in zoom-in duration-700"
+        />
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+          Domptt
+        </h1>
       </div>
 
       {/* Navigation */}
@@ -66,25 +68,21 @@ export default function Sidebar() {
                 <Link
                   href={item.href}
                   onClick={() => setIsOpen(false)}
-                  className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+                  className={`group mx-4 px-4 py-3 flex items-center gap-3 transition-all duration-200 font-medium text-sm rounded-2xl ${
                     isActive
-                      ? "bg-emerald-50 text-emerald-700 shadow-sm dark:bg-emerald-900/30 dark:text-emerald-400 dark:shadow-none"
-                      : "text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-900/50 dark:hover:text-slate-200"
+                      ? "bg-white/80 shadow-sm text-emerald-600"
+                      : "text-gray-500 hover:bg-white/50 hover:text-gray-900"
                   }`}
                 >
-                  <div
-                    className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200 ${
-                      isActive
-                        ? "bg-emerald-500 text-white shadow-md shadow-emerald-200 dark:shadow-none"
-                        : "bg-slate-100 text-slate-500 group-hover:bg-slate-200 group-hover:text-slate-600 dark:bg-slate-900 dark:text-slate-400 dark:group-hover:bg-slate-800 dark:group-hover:text-slate-300"
-                    }`}
-                  >
-                    <item.icon className="h-4 w-4" />
+                  <item.icon className={cn("h-5 w-5 stroke-[1.5px]", isActive ? "text-emerald-600" : "text-gray-400 group-hover:text-gray-900")} />
+                  <div className="flex flex-col">
+                    <span>{item.label}</span>
+                    {item.sublabel && (
+                      <span className="text-[10px] text-gray-400 font-normal leading-tight">
+                        {item.sublabel}
+                      </span>
+                    )}
                   </div>
-                  {item.label}
-                  {isActive && (
-                    <div className="ml-auto h-2 w-2 rounded-full bg-emerald-500" />
-                  )}
                 </Link>
               </li>
             );
@@ -92,20 +90,14 @@ export default function Sidebar() {
         </ul>
       </nav>
 
-      {/* Bottom section */}
-      <div className="border-t border-slate-100 p-3 dark:border-slate-800">
-        <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition-all duration-200 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-900/50 dark:hover:text-slate-200">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-500 dark:bg-slate-900 dark:text-slate-400">
-            <HelpCircle className="h-4 w-4" />
-          </div>
-          Help Center
-        </button>
-        <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-red-500 transition-all duration-200 hover:bg-red-50 dark:hover:bg-red-950/30">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-500 dark:bg-red-950/30">
-            <LogOut className="h-4 w-4" />
-          </div>
-          Log Out
-        </button>
+      {/* Bottom section - Floating Glass Card */}
+      <div className="mt-auto p-4 mb-4">
+        <div className="bg-white/60 backdrop-blur-md border border-white/40 rounded-[24px] p-2 shadow-sm">
+          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-gray-500 hover:bg-white/80 hover:text-red-500 transition-all duration-200">
+            <LogOut className="h-5 w-5 stroke-[1.5px]" />
+            <span className="text-sm font-semibold tracking-tight">Keluar Akun</span>
+          </button>
+        </div>
       </div>
       </aside>
     </>
