@@ -13,14 +13,16 @@ import {
   HelpCircle,
   LogOut,
   Target,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/" },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: Wallet, label: "My Wallet", href: "/wallet" },
   { icon: Calendar, label: "Kalender", href: "/calendar" },
   { icon: ChartBar, label: "Laporan Keuangan", href: "/transactions" },
+  { icon: Sparkles, label: "AI Chat", href: "/ai-chat" },
   { icon: Target, label: "Budget", href: "/budget" },
   { icon: UserIcon, label: "Profil", href: "/profile", sublabel: "Kelola Akun" },
 ];
@@ -62,7 +64,10 @@ export default function Sidebar() {
         </p>
         <ul className="space-y-1">
           {navItems.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive =
+              item.href === "/dashboard"
+                ? pathname === "/dashboard"
+                : pathname === item.href || pathname.startsWith(item.href + "/");
             return (
               <li key={item.label}>
                 <Link
@@ -74,7 +79,7 @@ export default function Sidebar() {
                       : "text-gray-500 hover:bg-white/50 hover:text-gray-900"
                   }`}
                 >
-                  <item.icon className={cn("h-5 w-5 stroke-[1.5px]", isActive ? "text-emerald-600" : "text-gray-400 group-hover:text-gray-900")} />
+                  <item.icon className={cn("h-5 w-5 stroke-[1.5px]", isActive ? "text-emerald-600" : item.label === "AI Chat" ? "text-gray-400 group-hover:text-blue-500" : "text-gray-400 group-hover:text-gray-900")} />
                   <div className="flex flex-col">
                     <span>{item.label}</span>
                     {item.sublabel && (
@@ -93,10 +98,10 @@ export default function Sidebar() {
       {/* Bottom section - Floating Glass Card */}
       <div className="mt-auto p-4 mb-4">
         <div className="bg-white/60 backdrop-blur-md border border-white/40 rounded-[24px] p-2 shadow-sm">
-          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-gray-500 hover:bg-white/80 hover:text-red-500 transition-all duration-200">
+          <Link href="/" className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-gray-500 hover:bg-white/80 hover:text-red-500 transition-all duration-200">
             <LogOut className="h-5 w-5 stroke-[1.5px]" />
             <span className="text-sm font-semibold tracking-tight">Keluar Akun</span>
-          </button>
+          </Link>
         </div>
       </div>
       </aside>

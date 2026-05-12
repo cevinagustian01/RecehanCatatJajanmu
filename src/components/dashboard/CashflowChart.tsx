@@ -29,19 +29,25 @@ const CustomTooltip = ({
 }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-[8px] bg-white px-4 py-3 shadow-[0_4px_6px_-1px_rgb(0,0,0,0.1)] border-none">
-        <p className="text-xs font-semibold text-slate-500 uppercase">{label}</p>
+      <div className="rounded-2xl bg-white dark:bg-[#1C1C1E] px-4 py-3 shadow-xl border border-gray-100 dark:border-white/10">
+        <p className="text-[11px] font-bold text-[#86868b] uppercase tracking-widest mb-2">{label}</p>
         {payload.map((entry, i) => (
-          <div key={i} className="mt-1 flex items-center gap-2">
-            <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
-            <span className="text-sm font-semibold text-slate-700">{formatRupiah(entry.value)}</span>
-            <span className="text-xs text-slate-400 capitalize">{entry.dataKey}</span>
+          <div key={i} className="flex items-center gap-2 mt-1">
+            <div className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
+            <span className="text-xs font-bold text-gray-900 dark:text-white">{formatRupiah(entry.value)}</span>
+            <span className="text-[11px] text-[#86868b] capitalize">{entry.dataKey}</span>
           </div>
         ))}
       </div>
     );
   }
   return null;
+};
+
+const PERIOD_LABELS: Record<ChartPeriod, string> = {
+  weekly: "Mingguan",
+  monthly: "Bulanan",
+  yearly: "Tahunan",
 };
 
 export default function CashflowChart({ initialData }: { initialData?: ChartDataPoint[] }) {
@@ -66,55 +72,73 @@ export default function CashflowChart({ initialData }: { initialData?: ChartData
   }, [period, loadData]);
 
   return (
-    <div className="bg-white/70 backdrop-blur-md border border-white/20 rounded-[24px] p-8 shadow-[0_8px_32px_0_rgba(0,0,0,0.05)]">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="bg-white/70 dark:bg-[#1C1C1E]/70 backdrop-blur-2xl border border-gray-100 dark:border-white/10 rounded-[28px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h3 className="text-[17px] font-bold text-[#1D1D1F] tracking-tight">Cashflow Overview</h3>
+          <h3 className="text-[17px] font-bold text-gray-900 dark:text-white tracking-tight">
+            Cashflow Overview
+          </h3>
           <p className="mt-0.5 text-[13px] text-[#86868b] font-medium tracking-tight">
-            {period === "yearly" ? "This Year" : period === "monthly" ? "This Month" : "Last 7 Days"}
+            {PERIOD_LABELS[period]}
           </p>
         </div>
-        <div className="flex gap-1 rounded-full bg-[#F5F5F7] p-1.5 border border-gray-100">
+        {/* Period pill tabs */}
+        <div className="w-full max-w-full flex items-center overflow-x-auto scrollbar-hide bg-gray-100/80 dark:bg-white/5 p-1 rounded-full">
           {(["weekly", "monthly", "yearly"] as ChartPeriod[]).map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`rounded-full px-5 py-2 text-[12px] font-bold capitalize transition-all duration-300 tracking-tight ${
+              className={`flex-1 whitespace-nowrap px-3 py-1.5 text-xs md:text-sm text-center rounded-full font-bold capitalize transition-all duration-200 tracking-tight min-h-[32px] ${
                 period === p
-                  ? "bg-white text-black shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
-                  : "text-[#86868b] hover:text-[#1D1D1F]"
+                  ? "bg-white dark:bg-[#2C2C2E] text-gray-900 dark:text-white shadow-sm"
+                  : "text-[#86868b] hover:text-gray-900 dark:hover:text-white"
               }`}
             >
-              {p}
+              {PERIOD_LABELS[p]}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="mt-8 h-[300px] lg:h-[450px] aspect-auto min-w-[300px]" style={{ minWidth: 0, minHeight: 0 }}>
+      {/* Chart */}
+      <div className="h-[260px] md:h-[300px]" style={{ minWidth: 0 }}>
         {isLoading ? (
           <div className="flex h-full items-center justify-center">
-            <div className="w-8 h-8 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : data.length === 0 ? (
+          <div className="flex h-full flex-col items-center justify-center gap-2">
+            <span className="text-3xl">📊</span>
+            <p className="text-sm text-[#86868b] font-medium">Belum ada data cashflow</p>
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-            <BarChart data={data} barGap={6} barCategoryGap="25%">
-              <CartesianGrid strokeDasharray="0" vertical={false} stroke="#E5E5E7" />
-              <XAxis dataKey="name" axisLine={false} tickLine={false}
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+            <BarChart data={data} barGap={4} barCategoryGap="30%">
+              <CartesianGrid strokeDasharray="0" vertical={false} stroke="rgba(0,0,0,0.05)" />
+              <XAxis
+                dataKey="name"
+                axisLine={false}
+                tickLine={false}
                 tick={{ fill: "#86868B", fontSize: 11, fontWeight: 600 }}
                 interval="preserveStartEnd"
-                minTickGap={10} />
-              <YAxis axisLine={false} tickLine={false}
+                minTickGap={10}
+              />
+              <YAxis
+                axisLine={false}
+                tickLine={false}
                 tick={{ fill: "#86868B", fontSize: 11, fontWeight: 600 }}
-                tickFormatter={(v) => `Rp${(v / 1000).toFixed(0)}k`} />
-                <Tooltip 
-                  content={<CustomTooltip />} 
-                  cursor={{ fill: 'rgba(0,0,0,0.02)' }}
-                />
-              <Legend iconType="circle" iconSize={10}
-                wrapperStyle={{ paddingTop: "24px", fontSize: "13px", fontWeight: 600, color: "#1D1D1F" }} />
-              <Bar dataKey="income" fill="#007AFF" radius={[10, 10, 0, 0]} name="Income" />
-              <Bar dataKey="expenses" fill="#E5E5E7" radius={[10, 10, 0, 0]} name="Expenses" />
+                tickFormatter={(v) => `${(v / 1000000).toFixed(1)}jt`}
+                width={48}
+              />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(0,0,0,0.02)", radius: 8 }} />
+              <Legend
+                iconType="circle"
+                iconSize={8}
+                wrapperStyle={{ paddingTop: "20px", fontSize: "12px", fontWeight: 700, color: "#86868b" }}
+              />
+              <Bar dataKey="income" fill="#10b981" radius={[6, 6, 0, 0]} name="Income" />
+              <Bar dataKey="expenses" fill="#e2e8f0" radius={[6, 6, 0, 0]} name="Expenses" />
             </BarChart>
           </ResponsiveContainer>
         )}

@@ -6,15 +6,17 @@ import {
   Home, 
   History, 
   Plus, 
-  WalletCards, 
+  Sparkles, 
   MoreHorizontal, 
   X, 
   ChartBar, 
+  Target,
   Calendar, 
   User, 
   Download, 
   HelpCircle,
-  ChevronRight
+  ChevronRight,
+  LogOut
 } from "lucide-react";
 import { useState } from "react";
 import AddTransactionModal from "./AddTransactionModal";
@@ -25,11 +27,15 @@ export default function BottomNav() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
 
+  // Jangan tampilkan di halaman auth
+  const isAuthPage = pathname.includes('/login') || pathname.includes('/sign-in') || pathname.includes('/sign-up');
+  if (isAuthPage) return null;
+
   const navItems = [
-    { icon: Home, label: "Home", href: "/" },
+    { icon: Home, label: "Home", href: "/dashboard" },
     { icon: History, label: "Riwayat", href: "/transactions" },
     { icon: null, label: "Add", href: null }, // Center button
-    { icon: WalletCards, label: "Budget", href: "/budget" },
+    { icon: Sparkles, label: "AI Chat", href: "/ai-chat" },
     { icon: MoreHorizontal, label: "Lainnya", href: null }, // Drawer trigger
   ];
 
@@ -53,7 +59,11 @@ export default function BottomNav() {
             }
 
             const Icon = item.icon!;
-            const isActive = item.href ? pathname === item.href : (item.label === "Lainnya" && isMoreOpen);
+            const isActive = item.href
+              ? item.href === "/dashboard"
+                ? pathname === "/dashboard"
+                : pathname === item.href || pathname.startsWith(item.href + "/")
+              : (item.label === "Lainnya" && isMoreOpen);
             
             return (
               <button
@@ -69,18 +79,18 @@ export default function BottomNav() {
               >
                 <div className={cn(
                   "p-1 rounded-xl transition-colors",
-                  isActive ? "text-emerald-600" : "text-gray-400"
+                  isActive ? item.label === "AI Chat" ? "text-blue-500" : "text-emerald-600" : "text-gray-400"
                 )}>
                   <Icon className={cn("h-6 w-6 stroke-[1.5px]", isActive && "stroke-[2px]")} />
                 </div>
                 <span className={cn(
                   "text-[10px] font-bold tracking-tight",
-                  isActive ? "text-emerald-600" : "text-gray-400"
+                  isActive ? item.label === "AI Chat" ? "text-blue-500" : "text-emerald-600" : "text-gray-400"
                 )}>
                   {item.label}
                 </span>
                 {isActive && (
-                  <div className="absolute bottom-1 w-1 h-1 rounded-full bg-emerald-600" />
+                  <div className={cn("absolute bottom-1 w-1 h-1 rounded-full", item.label === "AI Chat" ? "bg-blue-500" : "bg-emerald-600")} />
                 )}
               </button>
             );
@@ -118,6 +128,7 @@ export default function BottomNav() {
             <div className="space-y-3">
               {[
                 { icon: ChartBar, label: "Laporan Keuangan", href: "/transactions", color: "bg-blue-50 text-blue-600" },
+                { icon: Target, label: "Budget", href: "/budget", color: "bg-blue-50 text-blue-600" },
                 { icon: Calendar, label: "Kalender", href: "/calendar", color: "bg-emerald-50 text-emerald-600" },
                 { icon: User, label: "Profil & Akun", href: "/profile", color: "bg-purple-50 text-purple-600" },
                 { icon: Download, label: "Export Data", href: "#", color: "bg-amber-50 text-amber-600" },
@@ -139,6 +150,21 @@ export default function BottomNav() {
                 </Link>
               ))}
             </div>
+
+            {/* Destructive: Logout */}
+            <Link
+              href="/"
+              onClick={() => setIsMoreOpen(false)}
+              className="flex items-center justify-between p-4 bg-white dark:bg-[#1C1C1E] border border-red-100 dark:border-red-900/30 rounded-2xl mt-6 shadow-sm active:scale-[0.98] transition-transform group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-500 transition-colors group-hover:bg-red-100">
+                  <LogOut className="w-6 h-6 stroke-[1.5px]" />
+                </div>
+                <span className="font-bold text-red-600 dark:text-red-500 tracking-tight">Keluar Akun</span>
+              </div>
+              <ChevronRight className="w-5 h-5 text-red-300" />
+            </Link>
           </div>
         </div>
       )}

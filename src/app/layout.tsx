@@ -4,10 +4,9 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { SidebarProvider } from "@/components/dashboard/SidebarContext";
 import { BalanceVisibilityProvider } from "@/components/dashboard/BalanceVisibilityContext";
-import BottomNav from "@/components/dashboard/BottomNav";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "sonner";
-import { currentUser } from "@clerk/nextjs/server"; // Note: Kalau di masa depan ada error import, ganti jadi "@clerk/nextjs/server"
+import { currentUser } from "@clerk/nextjs/server";
 import { syncUser } from "@/lib/sync-user";
 
 const inter = Inter({
@@ -59,12 +58,11 @@ export default async function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
-        <body className={`${inter.variable} min-h-full bg-slate-50 text-slate-900 font-sans pb-[72px] md:pb-0 dark:bg-slate-950 dark:text-slate-50 transition-colors duration-300`} suppressHydrationWarning>
+        <body className={`${inter.variable} min-h-full bg-slate-50 text-slate-900 font-sans md:pb-0 dark:bg-slate-950 dark:text-slate-50 transition-colors duration-300`} suppressHydrationWarning>
           <ThemeProvider>
             <SidebarProvider>
               <BalanceVisibilityProvider>
                 {children}
-                <BottomNav />
               </BalanceVisibilityProvider>
             </SidebarProvider>
             <Toaster position="top-center" richColors />
