@@ -33,14 +33,16 @@ export default function SignUpPage() {
             signInUrl="/sign-in"
             appearance={{
               elements: {
-                formButtonPrimary: "bg-indigo-600 hover:bg-indigo-700 text-sm normal-case shadow-none",
-                card: "shadow-none w-full bg-transparent",
-                headerTitle: "text-2xl font-bold text-slate-900 dark:text-white",
-                headerSubtitle: "text-slate-500 dark:text-slate-400",
-                socialButtonsBlockButton: "border border-slate-200 bg-white hover:bg-slate-50 text-slate-700",
-                formFieldInput: "rounded-md border border-slate-200 bg-white text-slate-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100",
+                card: "bg-transparent shadow-none p-0 m-0 w-full", 
+                headerTitle: "hidden",
+                headerSubtitle: "hidden",
                 footer: "hidden",
-              },
+                socialButtonsBlockButton: "rounded-full border border-gray-200 bg-white px-4 py-3 text-sm font-medium hover:bg-gray-50 transition-all shadow-sm",
+                formFieldInput: "rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-sm focus:ring-1 focus:ring-black transition-all",
+                formButtonPrimary: "rounded-full bg-black hover:bg-gray-800 text-white h-12 text-sm font-medium transition-all active:scale-95",
+                dividerLine: "bg-gray-200",
+                dividerText: "text-xs font-medium text-gray-400",
+              }
             }}
           />
         </div>

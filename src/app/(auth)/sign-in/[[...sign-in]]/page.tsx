@@ -24,20 +24,15 @@ export default function SignInPage() {
           <SignIn 
             appearance={{
               elements: {
-                rootBox: "w-full flex justify-center",
-                cardBox: "shadow-none",
-                card: "bg-transparent shadow-none w-full max-w-sm p-0 m-0",
+                card: "bg-transparent shadow-none p-0 m-0 w-full", 
                 headerTitle: "hidden",
                 headerSubtitle: "hidden",
-                socialButtonsBlockButton: "rounded-full border border-gray-200 dark:border-white/10 text-sm font-medium h-12 mb-4 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-gray-900 dark:text-white",
-                socialButtonsBlockButtonText: "font-semibold",
-                dividerLine: "bg-gray-200 dark:bg-white/10",
-                dividerText: "text-xs text-gray-400 font-medium tracking-wide",
-                formFieldInput: "rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/5 px-4 py-3 text-sm focus:ring-2 focus:ring-gray-900 dark:focus:ring-white transition-all text-gray-900 dark:text-white",
-                formFieldLabel: "text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2",
-                formButtonPrimary: "rounded-full bg-gray-900 text-white h-12 font-medium mt-4 hover:bg-black active:scale-95 transition-all dark:bg-white dark:text-gray-900",
-                footerActionText: "hidden",
-                footerActionLink: "hidden",
+                footer: "hidden",
+                socialButtonsBlockButton: "rounded-full border border-gray-200 bg-white px-4 py-3 text-sm font-medium hover:bg-gray-50 transition-all shadow-sm",
+                formFieldInput: "rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-sm focus:ring-1 focus:ring-black transition-all",
+                formButtonPrimary: "rounded-full bg-black hover:bg-gray-800 text-white h-12 text-sm font-medium transition-all active:scale-95",
+                dividerLine: "bg-gray-200",
+                dividerText: "text-xs font-medium text-gray-400",
               }
             }}
           />

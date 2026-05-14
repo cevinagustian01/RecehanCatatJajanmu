@@ -19,11 +19,13 @@ import {
   LogOut
 } from "lucide-react";
 import { useState } from "react";
+import { useClerk } from "@clerk/nextjs";
 import AddTransactionModal from "./AddTransactionModal";
 import { cn } from "@/lib/utils";
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const { signOut } = useClerk();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
 
@@ -152,10 +154,12 @@ export default function BottomNav() {
             </div>
 
             {/* Destructive: Logout */}
-            <Link
-              href="/"
-              onClick={() => setIsMoreOpen(false)}
-              className="flex items-center justify-between p-4 bg-white dark:bg-[#1C1C1E] border border-red-100 dark:border-red-900/30 rounded-2xl mt-6 shadow-sm active:scale-[0.98] transition-transform group"
+            <button
+              onClick={() => {
+                setIsMoreOpen(false);
+                signOut({ redirectUrl: '/' });
+              }}
+              className="w-full flex items-center justify-between p-4 bg-white dark:bg-[#1C1C1E] border border-red-100 dark:border-red-900/30 rounded-2xl mt-6 shadow-sm active:scale-[0.98] transition-transform group"
             >
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-500 transition-colors group-hover:bg-red-100">
@@ -164,7 +168,7 @@ export default function BottomNav() {
                 <span className="font-bold text-red-600 dark:text-red-500 tracking-tight">Keluar Akun</span>
               </div>
               <ChevronRight className="w-5 h-5 text-red-300" />
-            </Link>
+            </button>
           </div>
         </div>
       )}

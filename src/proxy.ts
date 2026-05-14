@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 
 // 1. Tentukan rute mana saja yang harus login
 const isProtectedRoute = createRouteMatcher([
-  "/",
   "/wallet(.*)",
   "/transactions(.*)",
   "/analytics(.*)",

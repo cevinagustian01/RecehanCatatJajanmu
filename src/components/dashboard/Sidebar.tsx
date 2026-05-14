@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useClerk } from "@clerk/nextjs";
 import { useSidebar } from "@/components/dashboard/SidebarContext";
 import {
   LayoutDashboard,
@@ -29,6 +30,7 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { signOut } = useClerk();
   const { isOpen, setIsOpen } = useSidebar();
 
   return (
@@ -98,10 +100,13 @@ export default function Sidebar() {
       {/* Bottom section - Floating Glass Card */}
       <div className="mt-auto p-4 mb-4">
         <div className="bg-white/60 backdrop-blur-md border border-white/40 rounded-[24px] p-2 shadow-sm">
-          <Link href="/" className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-gray-500 hover:bg-white/80 hover:text-red-500 transition-all duration-200">
+          <button 
+            onClick={() => signOut({ redirectUrl: '/' })}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-gray-500 hover:bg-white/80 hover:text-red-500 transition-all duration-200"
+          >
             <LogOut className="h-5 w-5 stroke-[1.5px]" />
             <span className="text-sm font-semibold tracking-tight">Keluar Akun</span>
-          </Link>
+          </button>
         </div>
       </div>
       </aside>
