@@ -50,7 +50,6 @@ export default function ProfileClient({ initialUser }: { initialUser: any }) {
       const r = await fetch("/api/telegram/revoke", {method:"POST"});
       const d = await r.json();
       if(d.success) {
-        await refreshUser();
         toast.success("Disconnected");
         setFormData({...formData, connectTelegram: false});
       } else { toast.error(d.message||"Failed"); }
