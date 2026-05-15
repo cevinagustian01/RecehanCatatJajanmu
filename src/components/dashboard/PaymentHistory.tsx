@@ -253,29 +253,28 @@ export default function PaymentHistory({
       </div>
 
       {/* Filters Section */}
-      <div className="flex flex-wrap items-center gap-3 mb-6 p-4 bg-slate-50 rounded-xl border border-slate-100">
+      <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 sm:gap-3 mb-6 p-4 bg-slate-50 rounded-xl border border-slate-100">
         <Popover>
           <PopoverTrigger
             id="date"
             className={cn(
               buttonVariants({ variant: "outline" }),
-              "w-[260px] justify-start text-left font-normal bg-white",
+              "w-full sm:w-[220px] lg:w-[260px] justify-start text-left font-normal bg-white",
               !dateRange && "text-muted-foreground"
             )}
           >
-            <CalendarIcon className="mr-2 h-4 w-4 text-emerald-600" />
-            {dateRange?.from ? (
-              dateRange.to ? (
-                <>
-                  {format(dateRange.from, "LLL dd, y")} -{" "}
-                  {format(dateRange.to, "LLL dd, y")}
-                </>
+            <CalendarIcon className="mr-2 h-4 w-4 shrink-0 text-emerald-600" />
+            <span className="truncate">
+              {dateRange?.from ? (
+                dateRange.to ? (
+                  <>{format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}</>
+                ) : (
+                  format(dateRange.from, "LLL dd, y")
+                )
               ) : (
-                format(dateRange.from, "LLL dd, y")
-              )
-            ) : (
-              <span>Filter by date range...</span>
-            )}
+                "Filter by date range..."
+              )}
+            </span>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
             <Calendar
@@ -284,13 +283,13 @@ export default function PaymentHistory({
               defaultMonth={dateRange?.from}
               selected={dateRange}
               onSelect={handleDateRangeChange}
-              numberOfMonths={2}
+              numberOfMonths={1}
             />
           </PopoverContent>
         </Popover>
 
         <Select value={categoryFilter} onValueChange={handleCategoryChange}>
-          <SelectTrigger className="w-[180px] bg-white">
+          <SelectTrigger className="w-full sm:w-[160px] lg:w-[180px] bg-white">
             <SelectValue placeholder="Category" />
           </SelectTrigger>
           <SelectContent>
@@ -302,7 +301,7 @@ export default function PaymentHistory({
         </Select>
 
         <Select value={walletFilter} onValueChange={handleWalletChange}>
-          <SelectTrigger className="w-[180px] bg-white">
+          <SelectTrigger className="w-full sm:w-[160px] lg:w-[180px] bg-white">
             <SelectValue placeholder="Wallet" />
           </SelectTrigger>
           <SelectContent>
@@ -318,7 +317,7 @@ export default function PaymentHistory({
             variant="ghost" 
             size="sm" 
             onClick={clearFilters}
-            className="text-slate-500 hover:text-slate-900"
+            className="text-slate-500 hover:text-slate-900 self-start sm:self-auto"
           >
             Clear Filters
           </Button>
@@ -327,14 +326,14 @@ export default function PaymentHistory({
 
       {/* Table Section */}
       <div className="rounded-md border border-slate-100 overflow-x-auto w-full">
-        <Table className="min-w-[800px]">
+        <Table className="min-w-[600px] sm:min-w-0 w-full">
           <TableHeader className="bg-slate-50/50">
             <TableRow className="hover:bg-transparent">
-              <TableHead className="font-semibold text-slate-600 w-[250px]">Merchant</TableHead>
-              <TableHead className="font-semibold text-slate-600">Category</TableHead>
-              <TableHead className="font-semibold text-slate-600">Wallet</TableHead>
-              <TableHead className="font-semibold text-slate-600">Date</TableHead>
-              <TableHead className="font-semibold text-slate-600">Status</TableHead>
+              <TableHead className="font-semibold text-slate-600 min-w-[140px]">Merchant</TableHead>
+              <TableHead className="font-semibold text-slate-600 hidden sm:table-cell">Category</TableHead>
+              <TableHead className="font-semibold text-slate-600 hidden md:table-cell">Wallet</TableHead>
+              <TableHead className="font-semibold text-slate-600 hidden lg:table-cell">Date</TableHead>
+              <TableHead className="font-semibold text-slate-600 hidden sm:table-cell">Status</TableHead>
               <TableHead className="text-right font-semibold text-slate-600">Amount</TableHead>
               <TableHead className="w-[50px] font-semibold text-slate-600 text-center">Aksi</TableHead>
             </TableRow>
@@ -360,19 +359,19 @@ export default function PaymentHistory({
                       )}>
                         {tx.type === "credit" ? <ArrowDownLeft className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
                       </div>
-                      <span className="truncate max-w-[120px] xs:max-w-[150px] sm:max-w-[200px] block">{tx.name}</span>
+                      <span className="truncate max-w-[100px] sm:max-w-[180px] block">{tx.name}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-slate-500">{tx.category}</TableCell>
-                  <TableCell>
+                  <TableCell className="text-slate-500 hidden sm:table-cell">{tx.category}</TableCell>
+                  <TableCell className="hidden md:table-cell">
                     <span className="inline-flex items-center px-2 py-1 rounded-md bg-slate-100 text-xs font-medium text-slate-600">
                       {tx.wallet}
                     </span>
                   </TableCell>
-                  <TableCell className="text-slate-500">
+                  <TableCell className="text-slate-500 hidden lg:table-cell">
                     {format(tx.date, "MMM dd, yyyy")}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden sm:table-cell">
                     <Badge variant="outline" className={cn("rounded-lg border px-2 py-0.5 text-[11px] font-semibold capitalize shadow-none", statusCls[tx.status] || statusCls.completed)}>
                       {tx.status}
                     </Badge>

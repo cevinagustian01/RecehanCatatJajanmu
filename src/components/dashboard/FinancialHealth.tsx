@@ -1,6 +1,3 @@
-"use client";
-
-import { useMemo } from "react";
 import { formatRupiah } from "@/lib/utils";
 
 interface FinancialHealthProps {
@@ -9,7 +6,6 @@ interface FinancialHealthProps {
 }
 
 export default function FinancialHealth({ income, expenses }: FinancialHealthProps) {
-  const { percentage, status, emoji, barColor, badgeClass, description } = useMemo(() => {
     let pct = 0;
     if (income > 0) {
       pct = ((income - expenses) / income) * 100;
@@ -42,16 +38,12 @@ export default function FinancialHealth({ income, expenses }: FinancialHealthPro
       statusDesc = "Perlu evaluasi pengeluaran";
     }
 
-    return {
-      percentage: pct,
-      clampedPct,
-      status: statusText,
-      emoji: statusEmoji,
-      barColor: statusBar,
-      badgeClass: statusBadge,
-      description: statusDesc,
-    };
-  }, [income, expenses]);
+    const percentage = pct;
+    const status = statusText;
+    const emoji = statusEmoji;
+    const barColor = statusBar;
+    const badgeClass = statusBadge;
+    const description = statusDesc;
 
   const formattedPct =
     percentage > 0

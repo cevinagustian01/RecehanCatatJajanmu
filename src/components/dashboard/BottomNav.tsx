@@ -44,8 +44,8 @@ export default function BottomNav() {
   return (
     <>
       {/* Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-t border-gray-100 px-6 pb-[env(safe-area-inset-bottom,16px)] pt-3 shadow-[0_-8px_30px_rgba(0,0,0,0.04)] md:hidden">
-        <div className="flex items-center justify-between max-w-lg mx-auto">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-t border-gray-100 px-2 sm:px-6 pb-[env(safe-area-inset-bottom,16px)] pt-3 shadow-[0_-8px_30px_rgba(0,0,0,0.04)] md:hidden">
+        <div className="flex items-center justify-between max-w-lg mx-auto gap-0 sm:gap-0">
           {navItems.map((item, i) => {
             if (item.label === "Add") {
               return (
@@ -77,7 +77,7 @@ export default function BottomNav() {
                     setIsMoreOpen(true);
                   }
                 }}
-                className="flex flex-col items-center justify-center gap-1.5 w-14 transition-all active:scale-90"
+                className="flex flex-col items-center justify-center gap-1.5 min-w-0 flex-1 max-w-[64px] transition-all active:scale-90"
               >
                 <div className={cn(
                   "p-1 rounded-xl transition-colors",

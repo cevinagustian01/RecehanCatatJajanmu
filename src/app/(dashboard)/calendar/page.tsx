@@ -2,7 +2,7 @@ import { fetchTransactionsByDate } from "@/app/actions/transactions";
 import CalendarClient from "./CalendarClient";
 import { startOfMonth, endOfMonth } from "date-fns";
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 30;
 
 export default async function CalendarPage(props: {
   searchParams: Promise<{ month?: string; year?: string }>

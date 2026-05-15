@@ -31,7 +31,7 @@ export default function DashboardFilter({ wallets, currentTimeRange, currentWall
   const pillClass = "flex items-center gap-3 bg-white/80 backdrop-blur-md border border-gray-200/80 rounded-full px-5 py-2.5 shadow-sm cursor-pointer hover:bg-gray-50 transition-all h-auto focus:ring-0 focus:outline-hidden";
 
   return (
-    <div className="flex items-center gap-4 mb-8 overflow-x-auto no-scrollbar">
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mb-8">
       {/* Date Picker Pill */}
       <Select 
         value={currentTimeRange} 

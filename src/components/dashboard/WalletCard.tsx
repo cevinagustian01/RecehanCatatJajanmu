@@ -57,35 +57,35 @@ export default function WalletCard({
         </div>
 
         {/* Stats Row */}
-        <div className="grid grid-cols-2 gap-4 mb-6 md:flex md:gap-10">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-6 md:flex md:gap-10">
           {/* Income */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-900/30 shrink-0">
               <TrendingUp className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-tight text-[#86868b]">Pemasukan</p>
-              <p className="text-lg font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
+            <div className="min-w-0">
+              <p className="text-[11px] font-bold uppercase tracking-tight text-[#86868b] truncate">Pemasukan</p>
+              <p className="text-base sm:text-lg font-bold tracking-tight text-emerald-600 dark:text-emerald-400 truncate">
                 {showBalance ? formatRupiah(income) : "Rp •••••"}
               </p>
             </div>
           </div>
 
           {/* Expenses */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-50 dark:bg-rose-900/30 shrink-0">
               <TrendingDown className="h-5 w-5 text-rose-600 dark:text-rose-400" />
             </div>
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-tight text-[#86868b]">Pengeluaran</p>
-              <p className="text-lg font-bold tracking-tight text-gray-900 dark:text-white">
+            <div className="min-w-0">
+              <p className="text-[11px] font-bold uppercase tracking-tight text-[#86868b] truncate">Pengeluaran</p>
+              <p className="text-base sm:text-lg font-bold tracking-tight text-gray-900 dark:text-white truncate">
                 {showBalance ? formatRupiah(expenses) : "Rp •••••"}
               </p>
             </div>
           </div>
 
           {/* Savings Rate */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-3 shrink-0">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/30 shrink-0">
               <span className="text-base">📊</span>
             </div>

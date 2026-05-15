@@ -18,11 +18,11 @@ export default function AIFinanceAdvisor() {
       </div>
 
       {/* Suggested Prompts */}
-      <div className="flex gap-2 overflow-x-auto no-scrollbar mb-6">
-        <div className="bg-[#F5F5F7] text-[#1D1D1F] rounded-full px-4 py-2 text-[12px] font-semibold whitespace-nowrap hover:bg-gray-200 transition-colors cursor-pointer tracking-tight">
+      <div className="flex flex-wrap gap-2 mb-6">
+        <div className="bg-[#F5F5F7] text-[#1D1D1F] rounded-full px-4 py-2 text-[12px] font-semibold hover:bg-gray-200 transition-colors cursor-pointer tracking-tight">
           Analisa pengeluaran bulan ini
         </div>
-        <div className="bg-[#F5F5F7] text-[#1D1D1F] rounded-full px-4 py-2 text-[12px] font-semibold whitespace-nowrap hover:bg-gray-200 transition-colors cursor-pointer tracking-tight">
+        <div className="bg-[#F5F5F7] text-[#1D1D1F] rounded-full px-4 py-2 text-[12px] font-semibold hover:bg-gray-200 transition-colors cursor-pointer tracking-tight">
           Kategori paling boros?
         </div>
       </div>

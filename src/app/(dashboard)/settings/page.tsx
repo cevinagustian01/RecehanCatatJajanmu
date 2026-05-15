@@ -1,4 +1,6 @@
 import { getSettings } from "@/actions/settings-actions";
+
+export const revalidate = 60;
 import ProfileForm from "./ui/ProfileForm";
 import ConnectionsForm from "./ui/ConnectionsForm";
 import NotificationsForm from "./ui/NotificationsForm";

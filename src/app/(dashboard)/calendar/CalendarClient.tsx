@@ -105,19 +105,19 @@ export default function CalendarClient({
         </div>
       </div>
 
-      <div className="bg-white/50 backdrop-blur-xl rounded-[32px] p-6 sm:p-8 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)] border border-white/20 overflow-x-auto no-scrollbar">
-        <div className="min-w-[600px]">
+      <div className="bg-white/50 backdrop-blur-xl rounded-[32px] p-4 sm:p-8 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)] border border-white/20 overflow-x-auto no-scrollbar">
+        <div className="min-w-[320px] sm:min-w-0">
           {/* Calendar Header */}
-          <div className="grid grid-cols-7 border-b border-gray-100/50 pb-4 mb-4">
+          <div className="grid grid-cols-7 border-b border-gray-100/50 pb-3 sm:pb-4 mb-3 sm:mb-4">
             {['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'].map(day => (
               <div key={day} className="text-center">
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">{day}</span>
+                <span className="text-[9px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-widest">{day}</span>
               </div>
             ))}
           </div>
 
           {/* Calendar Grid */}
-          <div className="grid grid-cols-7 border-l border-t border-gray-100/50 rounded-sm">
+          <div className="grid grid-cols-7 border-l border-t border-gray-100/50">
             {days.map((day, idx) => {
               const dayKey = format(day, 'yyyy-MM-dd');
               const dayData = dailyData[dayKey] || { income: 0, expense: 0, total: 0 };
@@ -138,16 +138,17 @@ export default function CalendarClient({
                 <div 
                   key={dayKey} 
                   className={cn(
-                    "relative aspect-square p-1.5 sm:p-2.5 flex flex-col justify-between transition-all duration-500 group",
-                    !isCurrentMonth ? "bg-gray-50/20 opacity-30" : "hover:scale-[1.05] hover:z-20",
+                    "relative p-1 sm:p-2.5 flex flex-col justify-between transition-all duration-500 group",
+                    "min-h-[60px] sm:min-h-[90px]",
+                    !isCurrentMonth ? "bg-gray-50/20 opacity-30" : "hover:z-20",
                     !hasTransactions && isCurrentMonth ? "border-r border-b border-gray-50" : "border-none"
                   )}
                 >
-                  {/* Heatmap Layer (FORCE High-Visibility Net Flow) */}
+                  {/* Heatmap Layer */}
                   {hasTransactions && isCurrentMonth && netAmount !== 0 && (
                     <div 
                       className={cn(
-                        "absolute inset-1 rounded-2xl sm:rounded-[24px] transition-all duration-700 shadow-sm border border-black/5",
+                        "absolute inset-0.5 sm:inset-1 rounded-lg sm:rounded-[24px] transition-all duration-700 shadow-sm border border-black/5",
                         isProfit ? (
                           intensity > 0.9 ? "bg-[#059669]" :
                           intensity > 0.6 ? "bg-[#10B981]" :
@@ -162,7 +163,7 @@ export default function CalendarClient({
                   )}
 
                   <span className={cn(
-                    "relative z-10 text-[10px] sm:text-xs font-bold transition-colors duration-300",
+                    "relative z-10 text-[9px] sm:text-xs font-bold transition-colors duration-300",
                     isSameDay(day, new Date()) && !hasTransactions ? "text-emerald-600" : 
                     hasTransactions && intensity > 0.6 ? "text-white" : 
                     hasTransactions && intensity > 0 ? "text-gray-900" : "text-gray-400"
@@ -171,15 +172,15 @@ export default function CalendarClient({
                   </span>
 
                   {hasTransactions && isCurrentMonth && (
-                    <div className="relative z-10 flex flex-col gap-0.5 sm:gap-1 animate-in fade-in zoom-in duration-300">
+                    <div className="relative z-10 flex flex-col gap-0.5 animate-in fade-in zoom-in duration-300">
                       <p className={cn(
-                        "font-black text-[9px] sm:text-[11px] truncate leading-tight transition-colors duration-300",
+                        "font-bold text-[7px] sm:text-[11px] truncate leading-tight transition-colors duration-300",
                         intensity > 0.6 ? "text-white" : "text-gray-900"
                       )}>
                         {formatRupiah(dayData.total).replace(",00", "").replace("Rp", "Rp ")}
                       </p>
                       <div className={cn(
-                        "text-[7px] sm:text-[8px] font-bold px-1.5 py-0.5 rounded-full self-start shadow-sm border transition-colors duration-300",
+                        "text-[6px] sm:text-[8px] font-bold px-1 sm:px-1.5 py-0.5 rounded-full self-start shadow-sm border transition-colors duration-300 hidden sm:block",
                         intensity > 0.6 
                           ? "bg-white/20 text-white border-white/20" 
                           : isLoss 

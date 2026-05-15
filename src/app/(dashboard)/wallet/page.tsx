@@ -3,7 +3,7 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import WalletClient from "./WalletClient";
 import { syncUser } from "@/lib/sync-user";
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 30;
 
 export default async function WalletPage() {
   const { userId } = await auth();

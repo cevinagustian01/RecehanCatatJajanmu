@@ -151,13 +151,13 @@ export default function AIChatPage() {
       {/* BOTTOM SECTION: Chips + Input (Fixed Bottom) */}
       <div className="flex-none bg-white dark:bg-[#1C1C1E] md:rounded-b-3xl border-t border-gray-100 dark:border-white/10 p-4 pt-2 backdrop-blur-xl">
         {/* SUGGESTION CHIPS */}
-        <div className="px-2 pb-4 overflow-x-auto scrollbar-hide">
-          <div className="flex gap-2 pb-2">
+        <div className="px-2 pb-4">
+          <div className="flex flex-wrap gap-2">
             {suggestionChips.map((chip, idx) => (
               <button
                 key={idx}
                 onClick={() => handleSendMessage(chip)}
-                className="whitespace-nowrap px-4 py-2 bg-gray-100/80 hover:bg-gray-200/80 dark:bg-white/10 dark:hover:bg-white/20 rounded-full text-xs font-medium text-gray-700 dark:text-gray-300 transition-colors cursor-pointer"
+                className="px-4 py-2 bg-gray-100/80 hover:bg-gray-200/80 dark:bg-white/10 dark:hover:bg-white/20 rounded-full text-xs font-medium text-gray-700 dark:text-gray-300 transition-colors cursor-pointer"
               >
                 {chip}
               </button>
