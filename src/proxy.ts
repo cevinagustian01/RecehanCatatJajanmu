@@ -1,4 +1,4 @@
-﻿import { NextResponse, NextRequest } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
 function isSubdomainOf(host: string, prefix: string): boolean {
