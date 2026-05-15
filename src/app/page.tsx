@@ -1,5 +1,6 @@
 import Link from "next/link";
 import prisma from "@/lib/prisma";
+import { cache } from "react";
 import {
   ChartBar,
   Target,
@@ -13,19 +14,21 @@ import {
   Quote,
 } from "lucide-react";
 
-async function getContent(section: string) {
+const getContent = cache(async function (section: string) {
   const data = await prisma.landingPageContent.findUnique({
     where: { section },
   });
   return data;
-}
+});
 
 export default async function LandingPage() {
-  const hero = await getContent("hero");
-  const features = await getContent("features");
-  const testimonials = await getContent("testimonials");
-  const faq = await getContent("faq");
-  const cta = await getContent("cta");
+  const [hero, features, testimonials, faq, cta] = await Promise.all([
+    getContent("hero"),
+    getContent("features"),
+    getContent("testimonials"),
+    getContent("faq"),
+    getContent("cta"),
+  ]);
 
   const heroContent = hero?.content as { cta_text?: string; cta_link?: string } | null;
 
