@@ -1,7 +1,7 @@
+export const dynamic = "force-dynamic";
+
 import prisma from "@/lib/prisma";
 import TransactionsClient from "./TransactionsClient";
-
-export const revalidate = 30;
 
 export default async function TransactionsPage() {
   const transactions = await prisma.transaction.findMany({

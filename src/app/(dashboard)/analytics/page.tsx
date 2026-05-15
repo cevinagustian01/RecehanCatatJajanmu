@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import prisma from "@/lib/prisma";
 import CategoryPieChart from "@/components/analytics/CategoryPieChart";
 import { formatRupiah } from "@/lib/utils";

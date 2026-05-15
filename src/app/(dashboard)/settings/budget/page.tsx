@@ -1,7 +1,7 @@
+export const dynamic = "force-dynamic";
+
 import prisma from "@/lib/prisma";
 import BudgetClient from "./BudgetClient";
-
-export const revalidate = 60;
 
 export default async function BudgetSettingsPage() {
   const budgets = await prisma.budget.findMany({

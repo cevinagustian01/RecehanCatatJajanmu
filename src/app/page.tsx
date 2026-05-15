@@ -299,7 +299,7 @@ export default async function LandingPage() {
                       <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed flex-1 mb-6">&ldquo;{item.text}&rdquo;</p>
                       <div className="flex items-center gap-3">
                         {item.avatar ? (
-                          <img src={item.avatar} alt={item.name} className="h-10 w-10 rounded-full object-cover" />
+                          <img src={item.avatar} alt={item.name} loading="lazy" decoding="async" fetchPriority="low" className="h-10 w-10 rounded-full object-cover" />
                         ) : (
                           <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-sm font-bold text-gray-600 dark:text-gray-300">
                             {item.name.charAt(0)}

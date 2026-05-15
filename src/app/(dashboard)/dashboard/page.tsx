@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { createClient } from "@/lib/supabase/server";
 import { syncUser } from "@/lib/sync-user";
 import WalletCard from "@/components/dashboard/WalletCard";
@@ -8,14 +10,14 @@ import { getBudgetsWithSpent } from "@/actions/budget-actions";
 import prisma from "@/lib/prisma";
 import { fetchChartData } from "@/app/actions/transactions";
 import { Suspense } from "react";
-import dynamic from "next/dynamic";
+import nextDynamic from "next/dynamic";
 import DashboardLoading from "./loading";
 
-const DynamicCashflowChart = dynamic(() => import("@/components/dashboard/CashflowChart"), {
+const DynamicCashflowChart = nextDynamic(() => import("@/components/dashboard/CashflowChart"), {
   loading: () => <div className="h-[380px] rounded-[32px] bg-gray-200/60 animate-pulse border border-white/20" />,
 });
 
-const DynamicAIFinanceAdvisor = dynamic(() => import("@/components/dashboard/AIFinanceAdvisor"), {
+const DynamicAIFinanceAdvisor = nextDynamic(() => import("@/components/dashboard/AIFinanceAdvisor"), {
   loading: () => <div className="h-[176px] rounded-[32px] bg-gray-200/60 animate-pulse border border-white/20" />,
 });
 
