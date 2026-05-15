@@ -1,8 +1,11 @@
 
+"use client";
+
 import React from "react";
 import { format } from "date-fns";
 import { MoreVertical, ArrowRight } from "lucide-react";
-import { formatRupiah } from "@/lib/utils";
+import { useUserPrefs } from "@/components/prefs/UserPrefContext";
+import { formatCurrency } from "@/lib/utils";
 import Link from "next/link";
 
 interface Transaction {
@@ -12,6 +15,8 @@ interface Transaction {
   amount: number;
   type: "credit" | "debit";
   date: Date;
+  wallet?: string;
+  walletType?: string;
 }
 
 interface RecentTransactionsProps {
@@ -37,6 +42,7 @@ function getCategory(name: string) {
 }
 
 export default function RecentTransactions({ transactions }: RecentTransactionsProps) {
+  const { currency, t } = useUserPrefs();
   const displayData = transactions.slice(0, 10);
 
   return (
@@ -89,9 +95,26 @@ export default function RecentTransactions({ transactions }: RecentTransactionsP
                     <p className="font-semibold text-[14px] text-gray-900 dark:text-white tracking-tight truncate">
                       {tx.name || "—"}
                     </p>
-                    <p className="text-[12px] text-[#86868b] font-medium">
-                      {tx.category || "Lainnya"}
-                    </p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <p className="text-[12px] text-[#86868b] font-medium">
+                        {tx.category || "Lainnya"}
+                      </p>
+                      {tx.wallet && (
+                        <>
+                          <span className="w-1 h-1 rounded-full bg-gray-300" />
+                          <span className="text-[10px] text-[#86868b] font-medium">{tx.wallet}</span>
+                          {tx.walletType && (
+                            <span className={`text-[8px] font-bold px-1 py-0.5 rounded-full ${
+                              tx.walletType === "BANK" ? "bg-blue-50 text-blue-600" :
+                              tx.walletType === "E_WALLET" ? "bg-emerald-50 text-emerald-600" :
+                              "bg-amber-50 text-amber-600"
+                            }`}>
+                              {tx.walletType.replace('_', ' ')}
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -106,7 +129,7 @@ export default function RecentTransactions({ transactions }: RecentTransactionsP
                       }`}
                     >
                       {tx.type === "credit" ? "+" : "-"}
-                      {formatRupiah(tx.amount)}
+                      {formatCurrency(tx.amount, currency)}
                     </p>
                     <p className="text-[11px] text-[#86868b] font-medium">
                       {format(new Date(tx.date), "dd MMM yyyy")}
@@ -123,7 +146,7 @@ export default function RecentTransactions({ transactions }: RecentTransactionsP
                       }`}
                     >
                       {tx.type === "credit" ? "+" : "-"}
-                      {formatRupiah(tx.amount)}
+                      {formatCurrency(tx.amount, currency)}
                     </p>
                     <p className="text-[11px] text-[#86868b] font-medium">
                       {format(new Date(tx.date), "dd MMM")}

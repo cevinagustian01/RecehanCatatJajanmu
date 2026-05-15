@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { formatRupiah } from "@/lib/utils";
+import { useUserPrefs } from "@/components/prefs/UserPrefContext";
+import { formatCurrency } from "@/lib/utils";
 import {
   BarChart, Bar, XAxis, YAxis,
   Tooltip, ResponsiveContainer,
@@ -16,6 +17,7 @@ interface ChartDataPoint {
 }
 
 const CustomTooltip = ({ active, payload, label }: any) => {
+  const { currency } = useUserPrefs();
   if (active && payload && payload.length) {
     return (
       <div className="bg-white/80 backdrop-blur-2xl border border-gray-100/50 rounded-2xl px-5 py-4 shadow-[0_8px_32px_rgba(0,0,0,0.08)] min-w-[180px]">
@@ -26,7 +28,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
               <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
               <span className="text-[13px] font-semibold text-[#86868b] capitalize">{entry.dataKey}</span>
             </div>
-            <span className="text-[13px] font-bold text-gray-900">{formatRupiah(entry.value)}</span>
+            <span className="text-[13px] font-bold text-gray-900">{formatCurrency(entry.value, currency)}</span>
           </div>
         ))}
       </div>
@@ -42,6 +44,7 @@ const PERIOD_LABELS: Record<ChartPeriod, string> = {
 };
 
 export default function CashflowChart({ initialData }: { initialData?: ChartDataPoint[] }) {
+  const { currency, t } = useUserPrefs();
   const [period, setPeriod] = useState<ChartPeriod>("monthly");
   const [data, setData] = useState<ChartDataPoint[]>(initialData || []);
   const [isLoading, setIsLoading] = useState(false);
@@ -109,7 +112,7 @@ export default function CashflowChart({ initialData }: { initialData?: ChartData
             </div>
             <div className="min-w-0">
               <p className="text-[11px] font-bold text-[#86868b] uppercase tracking-widest">Pemasukan</p>
-              <p className="text-[15px] sm:text-[17px] font-bold text-gray-900 tracking-tight truncate">{formatRupiah(totalIncome)}</p>
+              <p className="text-[15px] sm:text-[17px] font-bold text-gray-900 tracking-tight truncate">{formatCurrency(totalIncome, currency)}</p>
             </div>
           </div>
           <div className="hidden sm:block h-8 w-px bg-gray-100 shrink-0" />
@@ -119,7 +122,7 @@ export default function CashflowChart({ initialData }: { initialData?: ChartData
             </div>
             <div className="min-w-0">
               <p className="text-[11px] font-bold text-[#86868b] uppercase tracking-widest">Pengeluaran</p>
-              <p className="text-[15px] sm:text-[17px] font-bold text-gray-900 tracking-tight truncate">{formatRupiah(totalExpenses)}</p>
+              <p className="text-[15px] sm:text-[17px] font-bold text-gray-900 tracking-tight truncate">{formatCurrency(totalExpenses, currency)}</p>
             </div>
           </div>
         </div>

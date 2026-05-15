@@ -9,36 +9,57 @@ import {
   Sparkles, 
   MoreHorizontal, 
   X, 
-  ChartBar, 
+  Wallet,
   Target,
   Calendar, 
   User, 
   Download, 
   HelpCircle,
   ChevronRight,
-  LogOut
+  LogOut,
+  Shield,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import AddTransactionModal from "./AddTransactionModal";
 import { cn } from "@/lib/utils";
+import { useUserPrefs } from "@/components/prefs/UserPrefContext";
 
 export default function BottomNav() {
   const pathname = usePathname();
   const { signOut } = useAuth();
+  const { t } = useUserPrefs();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/user/role")
+      .then((response) => response.json())
+      .then((data) => setIsAdmin(data.role === "ADMIN"))
+      .catch(() => setIsAdmin(false));
+  }, []);
 
   // Jangan tampilkan di halaman auth
   const isAuthPage = pathname.includes('/login') || pathname.includes('/sign-in') || pathname.includes('/sign-up');
   if (isAuthPage) return null;
 
   const navItems = [
-    { icon: Home, label: "Home", href: "/dashboard" },
-    { icon: History, label: "Riwayat", href: "/transactions" },
+    { icon: Home, label: t("nav.dashboard"), href: "/dashboard" },
+    { icon: History, label: t("nav.transactions"), href: "/transactions" },
     { icon: null, label: "Add", href: null }, // Center button
-    { icon: Sparkles, label: "AI Chat", href: "/ai-chat" },
-    { icon: MoreHorizontal, label: "Lainnya", href: null }, // Drawer trigger
+    { icon: Sparkles, label: t("nav.aiChat"), href: "/ai-chat" },
+    { icon: MoreHorizontal, label: t("nav.more"), href: null }, // Drawer trigger
+  ];
+
+  const moreMenu = [
+    { icon: Wallet, label: "Wallet/Dompet", href: "/wallet", color: "bg-emerald-50 text-emerald-600" },
+    { icon: Target, label: "Budget", href: "/budget", color: "bg-blue-50 text-blue-600" },
+    { icon: Calendar, label: "Kalender", href: "/calendar", color: "bg-emerald-50 text-emerald-600" },
+    { icon: User, label: "Profil & Akun", href: "/profile", color: "bg-purple-50 text-purple-600" },
+    ...(isAdmin ? [{ icon: Shield, label: "Admin CMS", href: "/admin", color: "bg-slate-50 text-slate-700" }] : []),
+    { icon: Download, label: "Export Data", href: "#", color: "bg-amber-50 text-amber-600" },
+    { icon: HelpCircle, label: "Pusat Bantuan", href: "#", color: "bg-gray-100 text-gray-600" },
   ];
 
   return (
@@ -65,7 +86,7 @@ export default function BottomNav() {
               ? item.href === "/dashboard"
                 ? pathname === "/dashboard"
                 : pathname === item.href || pathname.startsWith(item.href + "/")
-              : (item.label === "Lainnya" && isMoreOpen);
+              : (item.label === t("nav.more") && isMoreOpen);
             
             return (
               <button
@@ -73,7 +94,7 @@ export default function BottomNav() {
                 onClick={() => {
                   if (item.href) {
                     window.location.href = item.href;
-                  } else if (item.label === "Lainnya") {
+                  } else if (item.label === t("nav.more")) {
                     setIsMoreOpen(true);
                   }
                 }}
@@ -128,14 +149,7 @@ export default function BottomNav() {
             </div>
 
             <div className="space-y-3">
-              {[
-                { icon: ChartBar, label: "Laporan Keuangan", href: "/transactions", color: "bg-blue-50 text-blue-600" },
-                { icon: Target, label: "Budget", href: "/budget", color: "bg-blue-50 text-blue-600" },
-                { icon: Calendar, label: "Kalender", href: "/calendar", color: "bg-emerald-50 text-emerald-600" },
-                { icon: User, label: "Profil & Akun", href: "/profile", color: "bg-purple-50 text-purple-600" },
-                { icon: Download, label: "Export Data", href: "#", color: "bg-amber-50 text-amber-600" },
-                { icon: HelpCircle, label: "Pusat Bantuan", href: "#", color: "bg-gray-100 text-gray-600" },
-              ].map((menu, i) => (
+              {moreMenu.map((menu, i) => (
                 <Link
                   key={i}
                   href={menu.href}

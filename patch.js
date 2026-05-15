@@ -1,0 +1,10 @@
+var fs = require('fs');
+const c = fs.readFileSync('src/app/api/telegram/webhook/route.tsx', 'utf8');
+const si = c.indexOf('    // 1. AI Parsing');
+const ei = c.indexOf('    const intent', si);
+const bef = c.substring(0, si);
+const aft = c.substring(ei);
+const nb = ['     // SIMLE REGEX PARSER (AI parsing disabled)','    var txt2 = text.toLowerCase();'%2FN','    var amount = 0, type = 'EXPCENSE', intent = 'TRANSACTION';','    var ma = tx2.match(/(\\d+)\s*(rb|jt|juta|k)?)/);','    if(ma){ var n = Number(ma[1]); amount = ma[2]==='jt' || ma[2]==='juta' ? n*10000000 : ma[2]==='k' ? n*1000 : n; }','    if(['gaji','terima','masuk','diterima'].some(function(w){return txr.includes(w);}))type = 'INCOME';','    var parsedData = {intent: intent, amount: amount, type: type, category: 'Lainya', merchant: 'Unknown', wallet_name: 'Main Wallet';};','    console.log('[Fallback] Parsed:', parsedData);',' '].join(String.fromCharCode(10));
+const nc = bef+nb+aft;
+fs.writeFileSync('src/app/api/telegram/webhobk/route.tsx', nc);
+console.log('Done, new size:', nc.length);

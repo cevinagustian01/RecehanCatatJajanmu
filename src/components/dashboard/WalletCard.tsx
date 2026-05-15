@@ -2,7 +2,8 @@
 
 import { TrendingUp, TrendingDown, Eye, EyeOff, Zap } from "lucide-react";
 import { useBalanceVisibility } from "@/components/dashboard/BalanceVisibilityContext";
-import { formatRupiah } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
+import { useUserPrefs } from "@/components/prefs/UserPrefContext";
 
 export default function WalletCard({
   totalBalance = 0,
@@ -14,6 +15,8 @@ export default function WalletCard({
   expenses?: number;
 }) {
   const { showBalance, toggleBalance } = useBalanceVisibility();
+  const { currency } = useUserPrefs();
+  const fmt = (n: number) => formatCurrency(n, currency);
 
   const savingsRate =
     income > 0 ? Math.max(0, Math.round(((income - expenses) / income) * 100)) : 0;
@@ -51,7 +54,7 @@ export default function WalletCard({
         {/* Main Balance — MASSIVE typography */}
         <div className="mb-6">
           <h1 className="text-5xl md:text-6xl font-bold tracking-tighter text-gray-900 dark:text-white leading-none">
-            {showBalance ? formatRupiah(totalBalance) : "Rp •••••••"}
+            {showBalance ? fmt(totalBalance) : currency === "USD" ? "$ •••••••" : "Rp •••••••"}
           </h1>
           <p className="mt-2 text-sm text-[#86868b] font-medium">Total saldo semua dompet</p>
         </div>
@@ -66,7 +69,7 @@ export default function WalletCard({
             <div className="min-w-0">
               <p className="text-[11px] font-bold uppercase tracking-tight text-[#86868b] truncate">Pemasukan</p>
               <p className="text-base sm:text-lg font-bold tracking-tight text-emerald-600 dark:text-emerald-400 truncate">
-                {showBalance ? formatRupiah(income) : "Rp •••••"}
+                {showBalance ? fmt(income) : currency === "USD" ? "$ •••••" : "Rp •••••"}
               </p>
             </div>
           </div>
@@ -79,7 +82,7 @@ export default function WalletCard({
             <div className="min-w-0">
               <p className="text-[11px] font-bold uppercase tracking-tight text-[#86868b] truncate">Pengeluaran</p>
               <p className="text-base sm:text-lg font-bold tracking-tight text-gray-900 dark:text-white truncate">
-                {showBalance ? formatRupiah(expenses) : "Rp •••••"}
+                {showBalance ? fmt(expenses) : currency === "USD" ? "$ •••••" : "Rp •••••"}
               </p>
             </div>
           </div>

@@ -1,7 +1,8 @@
 "use client";
 
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
-import { formatRupiah } from "@/lib/utils";
+import { useUserPrefs } from "@/components/prefs/UserPrefContext";
+import { formatCurrency } from "@/lib/utils";
 import { PieChart as PieChartIcon } from "lucide-react";
 
 interface CategoryData {
@@ -12,6 +13,7 @@ interface CategoryData {
 const COLORS = ['#007AFF', '#34C759', '#FF9F0A', '#FF453A', '#BF5AF2', '#FF2D55', '#5856D6', '#64D2FF', '#30D158', '#FFD60A'];
 
 const CustomTooltip = ({ active, payload }: any) => {
+  const { currency } = useUserPrefs();
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
@@ -20,7 +22,7 @@ const CustomTooltip = ({ active, payload }: any) => {
           <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: payload[0].color }} />
           <p className="text-[13px] font-bold text-gray-900">{data.category}</p>
         </div>
-        <p className="text-[15px] font-bold text-gray-900 tracking-tight">{formatRupiah(data.amount)}</p>
+        <p className="text-[15px] font-bold text-gray-900 tracking-tight">{formatCurrency(data.amount, currency)}</p>
       </div>
     );
   }
@@ -33,6 +35,7 @@ export default function CategoryPieChart({ data, hideContainer = false, title = 
   title?: string;
   subtitle?: string;
 }) {
+  const { currency, t } = useUserPrefs();
   if (!data || data.length === 0) {
     const emptyState = (
       <div className="flex h-full items-center justify-center">

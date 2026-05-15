@@ -4,14 +4,39 @@ import BottomNav from "@/components/dashboard/BottomNav";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { SidebarProvider } from "@/components/dashboard/SidebarContext";
 import { BalanceVisibilityProvider } from "@/components/dashboard/BalanceVisibilityContext";
+import { UserPrefProvider } from "@/components/prefs/UserPrefContext";
+import { createClient } from "@/lib/supabase/server";
+import prisma from "@/lib/prisma";
+import type { Locale } from "@/lib/i18n";
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  let initialCurrency = "IDR";
+  let initialLocale: Locale = "id";
+
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const localUser = await prisma.user.findFirst({
+        where: { auth_user_id: user.id },
+        select: { currency: true, language: true },
+      });
+      if (localUser) {
+        initialCurrency = localUser.currency?.toUpperCase() || "IDR";
+        initialLocale = (localUser.language as Locale) || "id";
+      }
+    }
+  } catch {
+    // fallback
+  }
+
   return (
     <AuthProvider>
+      <UserPrefProvider initialCurrency={initialCurrency} initialLocale={initialLocale}>
       <SidebarProvider>
         <BalanceVisibilityProvider>
           <div className="flex h-screen bg-[#FBFBFD] dark:bg-black selection:bg-[#007AFF]/30 selection:text-black">
@@ -28,6 +53,7 @@ export default function DashboardLayout({
           </div>
         </BalanceVisibilityProvider>
       </SidebarProvider>
+      </UserPrefProvider>
     </AuthProvider>
   );
 }

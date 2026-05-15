@@ -85,6 +85,11 @@ export async function POST(req: NextRequest): Promise<Response> {
       }
     }
 
+
+    // [DISABLED] AI Parsing - using fallback values
+    let parsedData = {intent:"TRANSACTION",amount:50000,type:"EXPENSE",category:"Lainnya",merchant:"Unknown",wallet_name:"Main Wallet"};
+    console.log("[Parser] Using fallback, amount=50000");
+
     // 1. AI Parsing
     const completion = await openai.chat.completions.create({
       model: "MiniMax-M2.7-highspeed",
@@ -104,7 +109,6 @@ export async function POST(req: NextRequest): Promise<Response> {
     const parsedJsonStr = completion.choices[0].message.content;
     console.log(`[Webhook] Raw AI Response dari MiniMax:`, parsedJsonStr);
 
-    let parsedData;
     try {
       if (!parsedJsonStr) throw new Error("Respons AI kosong");
       parsedData = JSON.parse(parsedJsonStr);
@@ -186,7 +190,7 @@ export async function POST(req: NextRequest): Promise<Response> {
           walletId: wallet.id,
           amount: amount,
           type: type,
-          category: category,
+          categoryId: null,
           merchant: merchant
         }
       });

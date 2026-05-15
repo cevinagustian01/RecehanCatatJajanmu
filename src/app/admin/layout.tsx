@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import { syncUser } from "@/lib/sync-user";
-import AdminSidebar from "./AdminSidebar";
+import AdminShell from "./AdminShell";
 
 export default async function AdminLayout({
   children,
@@ -38,11 +38,8 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-[#FBFBFD]">
-      <AdminSidebar />
-      <main className="flex-1 p-8 overflow-auto">
-        {children}
-      </main>
-    </div>
+    <AdminShell>
+      {children}
+    </AdminShell>
   );
 }

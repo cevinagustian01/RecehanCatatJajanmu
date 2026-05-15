@@ -33,9 +33,9 @@ export async function getWalletsList() {
     const wallets = await prisma.wallet.findMany({
       where: { userId },
       orderBy: { created_at: 'desc' },
-      select: { id: true, wallet_name: true }
+      select: { id: true, wallet_name: true, type: true }
     });
-    return wallets.map(w => ({ id: w.id, name: w.wallet_name }));
+    return wallets.map(w => ({ id: w.id, name: w.wallet_name, type: w.type }));
   } catch (error) {
     console.error("PRISMA ERROR IN GETWALLETSLIST:", error);
     return [];

@@ -5,8 +5,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/u
 import { useCallback } from "react";
 import { Calendar, Wallet, ChevronDown } from "lucide-react";
 
+interface WalletEntry {
+  name: string;
+  type?: string;
+}
+
 interface DashboardFilterProps {
-  wallets: string[];
+  wallets: WalletEntry[];
   currentTimeRange: string;
   currentWallet: string;
 }
@@ -66,7 +71,16 @@ export default function DashboardFilter({ wallets, currentTimeRange, currentWall
         <SelectContent className="rounded-2xl border border-gray-100 bg-white shadow-xl p-1 animate-in zoom-in-95 duration-200">
           <SelectItem value="all" className="rounded-xl font-medium py-2">Semua Dompet</SelectItem>
           {wallets.map(w => (
-            <SelectItem key={w} value={w} className="rounded-xl font-medium py-2">{w}</SelectItem>
+            <SelectItem key={w.name} value={w.name} className="rounded-xl font-medium py-2">
+              <span className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full shrink-0 ${
+                  w.type === "BANK" ? "bg-blue-500" :
+                  w.type === "E_WALLET" ? "bg-emerald-500" :
+                  "bg-amber-500"
+                }`} />
+                {w.name}
+              </span>
+            </SelectItem>
           ))}
         </SelectContent>
       </Select>

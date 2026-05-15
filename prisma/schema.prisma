@@ -16,43 +16,32 @@ model User {
   id             String   @id @default(uuid())
   auth_user_id   String?  @unique
   email          String   @unique
-
-  // Existing Telegram identity (already in schema as telegram_id)
   telegram_id    String?  @unique
-
+  telegram_verified Boolean @default(false)
   role           Role     @default(USER)
-
-  // Financial
   monthly_budget Float    @default(0)
   daily_income   Float    @default(0)
   persona_mode   String   @default("Therapist")
-
-  // Profile (Settings page)
   displayName    String?
   avatarUrl      String?
   phoneNumber    String?
-
-  // Connections (Settings page)
   connectWhatsApp   Boolean @default(false)
   connectTelegram   Boolean @default(false)
-
-  // Credits & Subscription
   credits           Int      @default(10)
   maxCredits        Int      @default(10)
-  subscriptionPlan  String   @default("FREE") // FREE, PRO, ULTRA
-
-  // Notifications (Settings page)
+  subscriptionPlan  String   @default("FREE")
   notifyTransactionAlerts Boolean @default(false)
   notifyWeeklyReports     Boolean @default(false)
   notifyDailyReminders    Boolean @default(false)
-
-  // Analytics / reminders
   paydayDate     DateTime?
-
+  theme          String   @default("light")
+  language       String   @default("id")
+  currency       String   @default("idr")
   created_at     DateTime @default(now())
   wallets        Wallet[]
   budgets        Budget[]
   categories     Category[]
+  verifications  TelegramVerification[]
 }
 
 model Wallet {
@@ -60,12 +49,12 @@ model Wallet {
   userId          String
   wallet_name     String
   balance         Float    @default(0)
-  color           String?  // gradient theme: emerald, slate, purple, etc.
-  cardNumber      String?  // full card number (stored securely in production)
+  color           String?
+  cardNumber      String?
   expiryDate      String?
-  cardHolder      String?  // name printed on card
-  cardType        String   @default("SECONDARY") // PRIMARY or SECONDARY
-  type            String   @default("BANK") // BANK, E-WALLET, CASH
+  cardHolder      String?
+  cardType        String   @default("SECONDARY")
+  type            String   @default("BANK")
   created_at      DateTime @default(now())
   user            User     @relation(fields: [userId], references: [id])
   transactions    Transaction[]
@@ -93,8 +82,17 @@ model Budget {
   created_at  DateTime @default(now())
   user        User     @relation(fields: [userId], references: [id])
   category    Category @relation(fields: [categoryId], references: [id])
-
   @@unique([userId, categoryId])
+}
+
+model TelegramVerification {
+  id        String   @id @default(uuid())
+  userId    String
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@unique([userId, code])
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model Category {
@@ -102,32 +100,29 @@ model Category {
   userId    String
   name      String
   icon      String?  @default("🎯")
-  type      String?  @default("EXPENSE") // EXPENSE, INCOME, etc.
+  type      String?  @default("EXPENSE")
   created_at DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
   budgets   Budget[]
   transactions Transaction[]
 }
 
-// CMS: Landing Page Content
 model LandingPageContent {
   id        String   @id @default(uuid())
-  section   String   @unique // hero, features, cta, testimonials, faq
+  section   String   @unique
   title     String?
   subtitle  String?
-  content   Json?    // flexible content per section
+  content   Json?
   isActive  Boolean  @default(true)
   order     Int      @default(0)
   updated_at DateTime @default(now())
   created_at DateTime @default(now())
 }
 
-// CMS: Site Settings
 model SiteSetting {
   id        String   @id @default(uuid())
   key       String   @unique
   value     String
-  type      String   @default("string") // string, number, boolean, json
+  type      String   @default("string")
   updated_at DateTime @default(now())
 }
-

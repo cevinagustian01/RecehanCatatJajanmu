@@ -273,3 +273,41 @@ export async function resetWalletsAndTransactions(): Promise<ActionResult> {
     return { success: false, message: "Reset failed" };
   }
 }
+
+// Telegram Integration
+export async function sendTelegramLinkCode(): Promise<ActionResult<{ code: string; expiresAt: string }>> {
+  try {
+    const localUserId = await getLocalUserId();
+    if (!localUserId) return { success: false, message: 'Unauthenticated' };
+
+    const response = await fetch(new URL('/api/telegram/generate-code', process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    const result = await response.json();
+    if (!result.success) return { success: false, message: result.message };
+
+    return { success: true, data: { code: result.code, expiresAt: result.expiresAt } };
+  } catch (e) {
+    console.error('SETTINGS_ERROR(telegram link):', e);
+    return { success: false, message: 'Failed to generate Telegram link code' };
+  }
+}
+
+export async function getTelegramLinkStatus(): Promise<ActionResult<{ connected: boolean; verified: boolean }>> {
+  try {
+    const localUserId = await getLocalUserId();
+    if (!localUserId) return { success: false, message: 'Unauthenticated' };
+
+    const user = await prisma.user.findUnique({
+      where: { id: localUserId },
+      select: { telegram_id: true, telegram_verified: true, connectTelegram: true }
+    });
+
+    return { success: true, data: { connected: !!user?.telegram_id, verified: !!user?.telegram_verified } };
+  } catch (e) {
+    console.error('SETTINGS_ERROR(telegram status):', e);
+    return { success: false, message: 'Failed to get Telegram status' };
+  }
+}

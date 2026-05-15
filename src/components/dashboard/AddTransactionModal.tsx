@@ -29,7 +29,7 @@ export const AddTransactionModal = ({ isOpen, onClose, initialData }: { isOpen: 
   const [aiInput, setAiInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [wallets, setWallets] = useState<{id: string, name: string}[]>([]);
+  const [wallets, setWallets] = useState<{id: string, name: string, type?: string}[]>([]);
   const [walletsLoading, setWalletsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -413,7 +413,7 @@ export const AddTransactionModal = ({ isOpen, onClose, initialData }: { isOpen: 
                       <option value="" disabled>No wallets</option>
                     ) : (
                       wallets.map(w => (
-                        <option key={w.id} value={w.id}>{w.name}</option>
+                        <option key={w.id} value={w.id}>{w.name} ({w.type?.replace('_', ' ') || 'BANK'})</option>
                       ))
                     )}
                   </select>

@@ -1,0 +1,11 @@
+  onClick={() => setFormData({...formData, connectWhatsApp: !formData.connectWhatsApp})}
+                  className={cn(
+                    "w-12 h-6 rounded-full transition-all relative",
+                    formData.connectWhatsApp ? "bg-emerald-500" : "bg-gray-200"
+                  )}
+                >
+                  <div className={cn(
+                    "w-4 h-4 bg-white rounded-full absolute top-1 transition-all",
+                    formData.connectWhatsApp ? "right-1" : "left-1"
+                  )} />
+                </button>

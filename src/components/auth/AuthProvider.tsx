@@ -2,19 +2,21 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import type { User } from "@supabase/supabase-js";
 
 type AuthContext = {
   user: User | null;
   isLoading: boolean;
   signOut: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 };
 
 const AuthCtx = createContext<AuthContext>({
   user: null,
   isLoading: true,
   signOut: async () => {},
+  refreshUser: async () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -22,6 +24,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const supabase = createClient();
+
+  const refreshUser = useCallback(async () => {
+    const { data: { user: freshUser } } = await supabase.auth.getUser();
+    setUser(freshUser);
+  }, [supabase]);
 
   useEffect(() => {
     const {
@@ -40,7 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [supabase, router]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -49,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthCtx.Provider value={{ user, isLoading, signOut }}>
+    <AuthCtx.Provider value={{ user, isLoading, signOut, refreshUser }}>
       {children}
     </AuthCtx.Provider>
   );

@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { formatRupiah } from "@/lib/utils";
+import { useUserPrefs } from "@/components/prefs/UserPrefContext";
+import { cn, formatCurrency } from "@/lib/utils";
 import { Search as SearchIcon, Filter, LayoutGrid, List } from "lucide-react";
 import TransactionActions from "@/components/transactions/TransactionActions";
 import CategoryPieChart from "@/components/analytics/CategoryPieChart";
-import { cn } from "@/lib/utils";
 
 type Transaction = {
   id: string;
@@ -14,10 +14,11 @@ type Transaction = {
   type: string;
   created_at: Date;
   category?: { name: string | null } | null;
-  wallet?: { wallet_name: string } | null;
+  wallet?: { wallet_name: string; type?: string } | null;
 };
 
 export default function TransactionsClient({ initialTransactions }: { initialTransactions: Transaction[] }) {
+  const { currency, t } = useUserPrefs();
   const [searchQuery, setSearchQuery] = useState("");
   const [timeFilter, setTimeFilter] = useState("all");
   const [walletFilter, setWalletFilter] = useState("all");
@@ -76,9 +77,16 @@ export default function TransactionsClient({ initialTransactions }: { initialTra
   }, [filteredTransactions]);
 
   // Extract unique wallets for the dropdown
-  const uniqueWallets = Array.from(
-    new Set(initialTransactions.map((tx) => tx.wallet?.wallet_name).filter(Boolean))
-  ) as string[];
+  const walletEntries = Array.from(
+    initialTransactions.reduce((map, tx) => {
+      if (tx.wallet?.wallet_name) {
+        if (!map.has(tx.wallet.wallet_name)) {
+          map.set(tx.wallet.wallet_name, { name: tx.wallet.wallet_name, type: tx.wallet?.type });
+        }
+      }
+      return map;
+    }, new Map<string, { name: string; type?: string }>())
+  ).map(([_, entry]) => entry);
 
   // Calculate Chart Data dynamically
   const chartData = useMemo(() => {
@@ -130,9 +138,9 @@ export default function TransactionsClient({ initialTransactions }: { initialTra
             className="bg-white/50 backdrop-blur-sm border border-gray-100 text-gray-600 rounded-2xl px-5 py-3.5 text-sm font-semibold outline-none cursor-pointer focus:ring-2 focus:ring-black/5 transition-all appearance-none"
           >
             <option value="all">💳 Semua Dompet</option>
-            {uniqueWallets.map((wName) => (
-              <option key={wName} value={wName}>
-                {wName}
+            {walletEntries.map((w) => (
+              <option key={w.name} value={w.name}>
+                {w.name} ({w.type?.replace('_', ' ') || 'BANK'})
               </option>
             ))}
           </select>
@@ -171,7 +179,7 @@ export default function TransactionsClient({ initialTransactions }: { initialTra
                       </div>
                       <div className="flex flex-col items-end">
                         <span className="text-sm font-bold text-gray-900 tracking-tight">
-                          Rp {formatRupiah(item.amount).replace("Rp", "").trim()}
+                          Rp {formatCurrency(item.amount, currency).replace("Rp", "").trim()}
                         </span>
                         <span className="text-[10px] font-bold text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded-md mt-1">{percentage}%</span>
                       </div>
@@ -252,6 +260,15 @@ export default function TransactionsClient({ initialTransactions }: { initialTra
                           <p className="text-[11px] text-gray-400 font-bold uppercase tracking-tight">
                             {transaction.wallet?.wallet_name}
                           </p>
+                          {transaction.wallet?.type && (
+                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                              transaction.wallet.type === "BANK" ? "bg-blue-50 text-blue-600" :
+                              transaction.wallet.type === "E_WALLET" ? "bg-emerald-50 text-emerald-600" :
+                              "bg-amber-50 text-amber-600"
+                            }`}>
+                              {transaction.wallet.type.replace('_', ' ')}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -266,7 +283,7 @@ export default function TransactionsClient({ initialTransactions }: { initialTra
                         }`}
                       >
                         {String(transaction.type).toUpperCase() === "INCOME" ? "+" : "-"}Rp{" "}
-                        {formatRupiah(transaction.amount).replace("Rp", "").trim()}
+                        {formatCurrency(transaction.amount, currency).replace("Rp", "").trim()}
                       </p>
                       <TransactionActions tx={transaction} />
                     </div>

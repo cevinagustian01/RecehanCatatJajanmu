@@ -21,6 +21,8 @@ import { toast } from "sonner";
 
 export default function ProfileClient({ initialUser }: { initialUser: any }) {
   const [loading, setLoading] = useState(false);
+  const [ct, sCT] = useState(false);
+  const [rt, sRT] = useState(false);
   const [formData, setFormData] = useState({
     displayName: initialUser?.displayName || "",
     email: initialUser?.email || "",
@@ -30,6 +32,31 @@ export default function ProfileClient({ initialUser }: { initialUser: any }) {
   });
 
   const creditPercentage = (initialUser?.credits / initialUser?.maxCredits) * 100;
+
+  async function handleConnectTelegram() {
+    sCT(true);
+    try {
+      const r = await fetch("/api/telegram/generate-code", {method:"POST"});
+      const d = await r.json();
+      if(d.success) window.location.href = "https://t.me/dompttapp_bot?start=" + d.code;
+      else toast.error(d.message||"Failed");
+    } catch(e) { toast.error("Failed"); }
+    finally { sCT(false); }
+  }
+
+  async function handleDisconnectTelegram() {
+    sRT(true);
+    try {
+      const r = await fetch("/api/telegram/revoke", {method:"POST"});
+      const d = await r.json();
+      if(d.success) {
+        await refreshUser();
+        toast.success("Disconnected");
+        setFormData({...formData, connectTelegram: false});
+      } else { toast.error(d.message||"Failed"); }
+    } catch(e) { toast.error("Failed"); }
+    finally { sRT(false); }
+  }
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,7 +77,6 @@ export default function ProfileClient({ initialUser }: { initialUser: any }) {
 
   return (
     <div className="animate-in fade-in slide-in-from-top-4 duration-700 pb-20">
-      {/* Header Section */}
       <div className="mb-10 flex flex-col md:flex-row items-center gap-8 bg-white/50 backdrop-blur-xl p-8 rounded-[32px] border border-white/20 shadow-sm">
         <div className="relative group">
           <div className="w-32 h-32 rounded-3xl overflow-hidden border-4 border-white shadow-lg">
@@ -72,168 +98,144 @@ export default function ProfileClient({ initialUser }: { initialUser: any }) {
               "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest",
               initialUser?.subscriptionPlan === "PRO" ? "bg-emerald-500 text-white" : "bg-gray-100 text-gray-500"
             )}>
-              {initialUser?.subscriptionPlan || "FREE"}
+              {initialUser?.subscriptionPlan === "PRO" ? "Pro" : "Free"}
             </span>
           </div>
-          <p className="text-gray-500 font-medium mb-4">{initialUser?.email}</p>
-          <div className="flex flex-wrap justify-center md:justify-start gap-4">
-            <div className="flex items-center gap-2 px-4 py-2 bg-white/80 rounded-2xl border border-white shadow-sm">
-              <Zap className="w-4 h-4 text-emerald-500" />
-              <span className="text-xs font-bold text-gray-700">{initialUser?.credits} Kredit Tersisa</span>
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-white/80 rounded-2xl border border-white shadow-sm">
-              <ShieldCheck className="w-4 h-4 text-blue-500" />
-              <span className="text-xs font-bold text-gray-700">Akun Terverifikasi</span>
-            </div>
-          </div>
+          <p className="text-sm text-gray-400 mb-2">{initialUser?.email}</p>
+          {initialUser?.subscriptionPlan !== "PRO" && (
+            <p className="text-xs text-gray-300 italic">Upgrade ke Premium untuk fitur penuh</p>
+          )}
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: Form */}
         <div className="lg:col-span-7 space-y-8">
           <div className="bg-white/50 backdrop-blur-xl p-8 rounded-[32px] border border-white/20 shadow-sm">
-            <div className="flex items-center gap-3 mb-8">
-              <div className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center">
-                <User className="w-5 h-5 text-gray-400" />
-              </div>
-              <h2 className="text-xl font-bold text-gray-900 tracking-tight">Detail Pengguna</h2>
-            </div>
-
             <form onSubmit={handleUpdate} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Nama Lengkap</label>
-                  <input 
-                    type="text"
-                    value={formData.displayName}
-                    onChange={(e) => setFormData({...formData, displayName: e.target.value})}
-                    className="w-full px-5 py-3 rounded-2xl bg-white/80 border border-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all outline-none font-medium text-gray-900 shadow-sm"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Nomor WhatsApp</label>
-                  <input 
-                    type="text"
-                    value={formData.phoneNumber}
-                    onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})}
-                    placeholder="Contoh: 08123456789"
-                    className="w-full px-5 py-3 rounded-2xl bg-white/80 border border-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all outline-none font-medium text-gray-900 shadow-sm"
-                  />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Email (Read-only)</label>
-                  <input 
-                    type="email"
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-2 block">Nama Lengkap</label>
+                <input
+                  className="w-full px-4 py-3 rounded-2xl border border-gray-100 bg-white/80 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all"
+                  value={formData.displayName}
+                  onChange={(e) => setFormData({...formData, displayName: e.target.value})}
+                  placeholder="Nama lengkap"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-2 block">Email</label>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    className="w-full pl-11 pr-4 py-3 rounded-2xl border border-gray-100 bg-white/80 text-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
                     value={formData.email}
                     disabled
-                    className="w-full px-5 py-3 rounded-2xl bg-gray-50 border border-gray-100 font-medium text-gray-400 cursor-not-allowed shadow-inner"
                   />
                 </div>
               </div>
 
-              <div className="pt-4">
-                <button 
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-black text-white py-4 rounded-2xl font-bold hover:opacity-90 transition-all shadow-lg active:scale-95 disabled:opacity-50"
-                >
-                  {loading ? "Menyimpan..." : "Simpan Perubahan"}
-                </button>
-              </div>
-            </form>
-          </div>
-
-          {/* Connectivity */}
-          <div className="bg-white/50 backdrop-blur-xl p-8 rounded-[32px] border border-white/20 shadow-sm">
-            <h2 className="text-xl font-bold text-gray-900 tracking-tight mb-8">Konektivitas</h2>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-white/80 rounded-2xl border border-white shadow-sm">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500">
-                    <MessageCircle className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-gray-900">WhatsApp Alert</p>
-                    <p className="text-xs text-gray-400 font-medium tracking-tight">Kirim notifikasi ke WhatsApp</p>
-                  </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-2 block">Nomor Telepon</label>
+                <div className="relative">
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    className="w-full pl-11 pr-4 py-3 rounded-2xl border border-gray-100 bg-white/80 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all"
+                    value={formData.phoneNumber}
+                    onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})}
+                    placeholder="+62"
+                  />
                 </div>
-                <button 
-                  onClick={() => setFormData({...formData, connectWhatsApp: !formData.connectWhatsApp})}
-                  className={cn(
-                    "w-12 h-6 rounded-full transition-all relative",
-                    formData.connectWhatsApp ? "bg-emerald-500" : "bg-gray-200"
-                  )}
-                >
-                  <div className={cn(
-                    "w-4 h-4 bg-white rounded-full absolute top-1 transition-all",
-                    formData.connectWhatsApp ? "right-1" : "left-1"
-                  )} />
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-white/80 rounded-2xl border border-white shadow-sm">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-500">
-                    <Send className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-gray-900">Telegram Bot</p>
-                    <p className="text-xs text-gray-400 font-medium tracking-tight">Catat otomatis via Telegram</p>
-                  </div>
-                </div>
-                <button 
-                  onClick={() => setFormData({...formData, connectTelegram: !formData.connectTelegram})}
-                  className={cn(
-                    "w-12 h-6 rounded-full transition-all relative",
-                    formData.connectTelegram ? "bg-blue-500" : "bg-gray-200"
-                  )}
-                >
-                  <div className={cn(
-                    "w-4 h-4 bg-white rounded-full absolute top-1 transition-all",
-                    formData.connectTelegram ? "right-1" : "left-1"
-                  )} />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: Credits & Subs */}
-        <div className="lg:col-span-5 space-y-8">
-          {/* Usage Credits */}
-          <div className="bg-white/50 backdrop-blur-xl p-8 rounded-[32px] border border-white/20 shadow-sm overflow-hidden relative">
-            <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-emerald-500" />
-                </div>
-                <h2 className="text-xl font-bold text-gray-900 tracking-tight">Usage Credits</h2>
               </div>
 
               <div className="space-y-4">
-                <div className="flex justify-between items-end">
-                  <div>
-                    <p className="text-3xl font-black text-gray-900">{initialUser?.credits}</p>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Kredit Tersisa</p>
+                <h3 className="text-sm font-semibold text-gray-700">Integrasi</h3>
+
+                <div className="flex items-center justify-between p-4 bg-white/80 rounded-2xl border border-white shadow-sm">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center text-green-500">
+                      <MessageCircle className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900">WhatsApp</p>
+                      <p className="text-xs text-gray-400 font-medium tracking-tight">Alerts otomatis</p>
+                    </div>
                   </div>
-                  <p className="text-xs font-bold text-gray-400">Kuota: {initialUser?.maxCredits}</p>
+                  <button 
+                    onClick={() => setFormData({...formData, connectWhatsApp: !formData.connectWhatsApp})}
+                    className={cn(
+                      "w-12 h-6 rounded-full transition-all relative",
+                      formData.connectWhatsApp ? "bg-emerald-500" : "bg-gray-200"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-4 h-4 bg-white rounded-full absolute top-1 transition-all",
+                      formData.connectWhatsApp ? "right-1" : "left-1"
+                    )} />
+                  </button>
                 </div>
 
-                <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-emerald-500 rounded-full transition-all duration-1000 ease-out shadow-[0_0_20px_rgba(16,185,129,0.4)]"
-                    style={{ width: `${creditPercentage}%` }}
-                  />
+                <div className="flex items-center justify-between p-4 bg-white/80 rounded-2xl border border-white shadow-sm">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-500">
+                      <Send className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900">Telegram Bot</p>
+                      <p className="text-xs text-gray-400 font-medium tracking-tight">Catat otomatis via Telegram</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={cn("rounded-full px-3 py-1 text-xs font-medium", initialUser?.telegramVerified ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-400")}>
+                      {initialUser?.telegramVerified ? "Connected" : "Not connected"}
+                    </span>
+                    {initialUser?.telegramVerified ? (
+                      <button type="button" onClick={handleDisconnectTelegram} className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-500 hover:bg-red-50">
+                        Putuskan
+                      </button>
+                    ) : (
+                      <button type="button" onClick={handleConnectTelegram} className="rounded-lg bg-blue-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-600">
+                        Connect
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <p className="text-[11px] text-gray-400 font-medium leading-relaxed italic">
-                  * Kredit berkurang setiap kali Anda menambah transaksi baru. Upgrade untuk kuota tanpa batas.
-                </p>
               </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-black text-white py-4 rounded-2xl font-bold hover:opacity-90 transition-all shadow-lg active:scale-95 disabled:opacity-50"
+              >
+                {loading ? "Menyimpan..." : "Simpan Perubahan"}
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div className="lg:col-span-5 space-y-8">
+          <div className="bg-white/50 backdrop-blur-xl p-8 rounded-[32px] border border-white/20 shadow-sm">
+            <h2 className="text-xl font-bold text-gray-900 tracking-tight mb-6">Usage Credits</h2>
+            <div className="space-y-4">
+              <div className="flex justify-between items-end">
+                <div>
+                  <p className="text-3xl font-black text-gray-900">{initialUser?.credits}</p>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Credits</p>
+                </div>
+                <p className="text-xs font-bold text-gray-400">Kuota: {initialUser?.maxCredits}</p>
+              </div>
+
+              <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-emerald-500 rounded-full transition-all duration-1000 ease-out shadow-[0_0_20px_rgba(16,185,129,0.4)]"
+                  style={{ width: `${creditPercentage}%` }}
+                />
+              </div>
+              <p className="text-[11px] text-gray-400 font-medium leading-relaxed italic">
+                * Kredit berkurang setiap kali Anda menambah transaksi baru. Upgrade untuk kuota tanpa batas.
+              </p>
             </div>
           </div>
 
-          {/* Subscription */}
           <div className="bg-white/90 backdrop-blur-xl p-8 rounded-[32px] border border-white/20 shadow-lg relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-6 opacity-10 rotate-12 transition-transform group-hover:scale-110">
               <ShieldCheck className="w-24 h-24 text-gray-900" />
@@ -265,7 +267,6 @@ export default function ProfileClient({ initialUser }: { initialUser: any }) {
             </div>
           </div>
 
-          {/* Support & Legal */}
           <div className="bg-white/50 backdrop-blur-xl p-8 rounded-[32px] border border-white/20 shadow-sm space-y-6">
             <h2 className="text-xl font-bold text-gray-900 tracking-tight mb-2">Bantuan & Legal</h2>
             

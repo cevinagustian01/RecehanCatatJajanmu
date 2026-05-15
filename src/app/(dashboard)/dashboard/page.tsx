@@ -82,6 +82,7 @@ async function DashboardData({ localUserId, timeRange, wallet }: { localUserId?:
       name: tx.merchant,
       category: tx.category?.name ?? "",
       wallet: tx.wallet.wallet_name,
+      walletType: tx.wallet.type ?? undefined,
       amount: tx.amount,
       type: (String(tx.type).toUpperCase() === 'INCOME' ? 'credit' : 'debit') as "credit" | "debit",
       date: tx.created_at,

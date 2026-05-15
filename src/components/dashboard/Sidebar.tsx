@@ -19,11 +19,13 @@ import {
   Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useUserPrefs } from "@/components/prefs/UserPrefContext";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { signOut } = useAuth();
   const { isOpen, setIsOpen } = useSidebar();
+  const { t } = useUserPrefs();
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
@@ -31,14 +33,14 @@ export default function Sidebar() {
   }, []);
 
   const navItems = [
-    { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
-    { icon: Wallet, label: "My Wallet", href: "/wallet" },
-    { icon: Calendar, label: "Kalender", href: "/calendar" },
-    { icon: ChartBar, label: "Laporan Keuangan", href: "/transactions" },
-    { icon: Sparkles, label: "AI Chat", href: "/ai-chat" },
-    { icon: Target, label: "Budget", href: "/budget" },
-    { icon: UserIcon, label: "Profil", href: "/profile", sublabel: "Kelola Akun" },
-    ...(isAdmin ? [{ icon: Shield, label: "Admin CMS", href: "/admin" }] : []),
+    { icon: LayoutDashboard, label: t("nav.dashboard"), href: "/dashboard" },
+    { icon: Wallet, label: t("nav.wallet"), href: "/wallet" },
+    { icon: Calendar, label: t("nav.calendar"), href: "/calendar" },
+    { icon: ChartBar, label: t("nav.transactions"), href: "/transactions" },
+    { icon: Sparkles, label: t("nav.aiChat"), href: "/ai-chat" },
+    { icon: Target, label: t("nav.budget"), href: "/budget" },
+    { icon: UserIcon, label: t("nav.profile"), href: "/profile", sublabel: "Kelola Akun" },
+    ...(isAdmin ? [{ icon: Shield, label: t("nav.admin"), href: "/admin" }] : []),
   ];
 
   return (
@@ -113,7 +115,7 @@ export default function Sidebar() {
             className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-gray-500 hover:bg-white/80 hover:text-red-500 transition-all duration-200"
           >
             <LogOut className="h-5 w-5 stroke-[1.5px]" />
-            <span className="text-sm font-semibold tracking-tight">Keluar Akun</span>
+            <span className="text-sm font-semibold tracking-tight">{t("nav.signOut")}</span>
           </button>
         </div>
       </div>

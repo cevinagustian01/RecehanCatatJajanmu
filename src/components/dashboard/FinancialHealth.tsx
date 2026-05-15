@@ -1,4 +1,7 @@
-import { formatRupiah } from "@/lib/utils";
+"use client";
+
+import { useUserPrefs } from "@/components/prefs/UserPrefContext";
+import { formatCurrency } from "@/lib/utils";
 
 interface FinancialHealthProps {
   income: number;
@@ -6,6 +9,7 @@ interface FinancialHealthProps {
 }
 
 export default function FinancialHealth({ income, expenses }: FinancialHealthProps) {
+    const { currency, t } = useUserPrefs();
     let pct = 0;
     if (income > 0) {
       pct = ((income - expenses) / income) * 100;
@@ -98,7 +102,7 @@ export default function FinancialHealth({ income, expenses }: FinancialHealthPro
       <div className="flex items-center justify-between rounded-2xl bg-gray-50 dark:bg-white/5 px-4 py-3">
         <span className="text-[13px] font-semibold text-[#86868b]">Net Cashflow</span>
         <span className={`text-[14px] font-bold tracking-tight ${net >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500"}`}>
-          {net >= 0 ? "+" : ""}{formatRupiah(net)}
+          {net >= 0 ? "+" : ""}{formatCurrency(net, currency)}
         </span>
       </div>
     </div>

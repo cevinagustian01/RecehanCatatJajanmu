@@ -1,0 +1,76 @@
+﻿"use client";
+
+import { useState } from "react";
+import { 
+  User, 
+  Mail, 
+  Phone, 
+  ShieldCheck, 
+  CreditCard, 
+  Zap, 
+  MessageCircle, 
+  Send, 
+  HelpCircle, 
+  FileText,
+  Camera,
+  CheckCircle2
+} from "lucide-react";
+import { formatRupiah, cn } from "@/lib/utils";
+import { updateProfile } from "@/app/actions/profile";
+import { toast } from "sonner";
+
+export default function ProfileClient({ initialUser }: { initialUser: any }) {
+  const [loading, setLoading] = useState(false);
+  const [ct, sCT] = useState(false);
+  const [rt, sRT] = useState(false);
+  const [formData, setFormData] = useState({
+    displayName: initialUser?.displayName || "",
+    email: initialUser?.email || "",
+    phoneNumber: initialUser?.phoneNumber || "",
+    connectWhatsApp: initialUser?.connectWhatsApp || false,
+    connectTelegram: initialUser?.connectTelegram || false,
+  });
+
+  const creditPercentage = (initialUser?.credits / initialUser?.maxCredits) * 100;
+
+  async function handleConnectTelegram() {
+    sCT(true);
+    try {
+      const r = await fetch("/api/telegram/generate-code", {method:"POST"});
+      const d = await r.json();
+      if(d.success) window.location.href = "https://t.me/dompttapp_bot?start=" + d.code;
+      else toast.error(d.message||"Failed");
+    } catch(e) { toast.error("Failed"); }
+    finally { sCT(false); }
+  }
+
+  async function handleDisconnectTelegram() {
+    sRT(true);
+    try {
+      const r = await fetch("/api/telegram/revoke", {method:"POST"});
+      const d = await r.json();
+      if(d.success) {
+        await refreshUser();
+        toast.success("Disconnected");
+        setFormData({...formData, connectTelegram: false});
+      } else { toast.error(d.message||"Failed"); }
+    } catch(e) { toast.error("Failed"); }
+    finally { sRT(false); }
+  }
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const res = await updateProfile({
+      displayName: formData.displayName,
+      phoneNumber: formData.phoneNumber,
+      connectWhatsApp: formData.connectWhatsApp,
+      connectTelegram: formData.connectTelegram,
+    });
+    setLoading(false);
+    if (res.success) {
+      toast.success("Profil berhasil diperbarui");
+    } else {
+      toast.error(res.message);
+    }
+  };

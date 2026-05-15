@@ -16,7 +16,8 @@ import {
 import { id } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { formatRupiah, cn } from "@/lib/utils";
+import { useUserPrefs } from "@/components/prefs/UserPrefContext";
+import { cn, formatCurrency } from "@/lib/utils";
 
 type Transaction = {
   id: string;
@@ -34,6 +35,7 @@ export default function CalendarClient({
   currentMonth: number, 
   currentYear: number 
 }) {
+  const { currency, t } = useUserPrefs();
   const router = useRouter();
   const date = new Date(currentYear, currentMonth);
 
@@ -177,7 +179,7 @@ export default function CalendarClient({
                         "font-bold text-[7px] sm:text-[11px] truncate leading-tight transition-colors duration-300",
                         intensity > 0.6 ? "text-white" : "text-gray-900"
                       )}>
-                        {formatRupiah(dayData.total).replace(",00", "").replace("Rp", "Rp ")}
+                        {formatCurrency(dayData.total, currency).replace(",00", "").replace("Rp", "Rp ")}
                       </p>
                       <div className={cn(
                         "text-[6px] sm:text-[8px] font-bold px-1 sm:px-1.5 py-0.5 rounded-full self-start shadow-sm border transition-colors duration-300 hidden sm:block",
@@ -214,11 +216,11 @@ export default function CalendarClient({
       <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white/50 backdrop-blur-md p-6 rounded-[24px] border border-white/20 shadow-sm">
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Belanja Bulan Ini</p>
-            <p className="text-xl font-bold text-gray-900 tracking-tight">{formatRupiah(totalMonthlySpending)}</p>
+            <p className="text-xl font-bold text-gray-900 tracking-tight">{formatCurrency(totalMonthlySpending, currency)}</p>
           </div>
           <div className="bg-white/50 backdrop-blur-md p-6 rounded-[24px] border border-white/20 shadow-sm">
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Rata-rata Pengeluaran Harian</p>
-            <p className="text-xl font-bold text-gray-900 tracking-tight">{formatRupiah(monthlyAverage)}</p>
+            <p className="text-xl font-bold text-gray-900 tracking-tight">{formatCurrency(monthlyAverage, currency)}</p>
           </div>
           <div className="bg-white/50 backdrop-blur-md p-6 rounded-[24px] border border-white/20 shadow-sm flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center shadow-inner">

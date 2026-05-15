@@ -1,8 +1,10 @@
-import { formatRupiah } from "@/lib/utils";
+"use client";
+
+import { useUserPrefs } from "@/components/prefs/UserPrefContext";
+import { cn, formatCurrency } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/categories";
 import { Target } from "lucide-react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 
 type BudgetProgress = {
   category: string;
@@ -23,6 +25,7 @@ function getBadgeStyle(pct: number): string {
 }
 
 export default function BudgetTracker({ items }: { items: BudgetProgress[] }) {
+  const { currency, t } = useUserPrefs();
   if (items.length === 0) return null;
 
   return (
@@ -66,7 +69,7 @@ export default function BudgetTracker({ items }: { items: BudgetProgress[] }) {
                 </span>
                 <div className="flex items-center gap-2">
                   <span className="text-[12px] font-semibold text-[#86868b] tracking-tight hidden sm:block">
-                    {formatRupiah(item.spent)} / {formatRupiah(item.limit)}
+                    {formatCurrency(item.spent, currency)} / {formatCurrency(item.limit, currency)}
                   </span>
                   <span
                     className={cn(
@@ -94,12 +97,12 @@ export default function BudgetTracker({ items }: { items: BudgetProgress[] }) {
               {/* Remaining note */}
               {pct < 100 && (
                 <p className="text-[11px] text-[#86868b] font-medium mt-1">
-                  Sisa {formatRupiah(remaining)}
+                  Sisa {formatCurrency(remaining, currency)}
                 </p>
               )}
               {pct >= 100 && (
                 <p className="text-[11px] text-rose-500 font-bold mt-1">
-                  ⚠ Batas terlampaui {formatRupiah(item.spent - item.limit)}
+                  ⚠ Batas terlampaui {formatCurrency(item.spent - item.limit, currency)}
                 </p>
               )}
             </div>

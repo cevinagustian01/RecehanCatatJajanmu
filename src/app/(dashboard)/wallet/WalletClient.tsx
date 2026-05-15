@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { addWallet, updateWallet, deleteWallet } from "@/app/actions/wallets";
-import { formatRupiah } from "@/lib/utils";
-import { MoreVertical, Plus, Edit2, Trash2, Wallet as WalletIcon, X, Loader2, AlertTriangle } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
+import { Plus, Edit2, Trash2, Wallet as WalletIcon, X, Loader2, AlertTriangle, Smartphone, Banknote, Landmark } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useBalanceVisibility } from "@/components/dashboard/BalanceVisibilityContext";
+import { useUserPrefs } from "@/components/prefs/UserPrefContext";
 import { toast } from "sonner";
 
 type WalletData = { 
@@ -25,6 +26,8 @@ export default function WalletClient({ initialWallets }: { initialWallets: Walle
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const { showBalance } = useBalanceVisibility();
+  const { currency } = useUserPrefs();
+  const fmt = (n: number) => formatCurrency(n, currency);
 
   // Modals state
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -36,10 +39,24 @@ export default function WalletClient({ initialWallets }: { initialWallets: Walle
   // Form fields
   const [name, setName] = useState("");
   const [balance, setBalance] = useState("");
+  const [walletType, setWalletType] = useState("BANK");
+
+  const walletTypeOptions = [
+    { value: "BANK", label: "Bank", icon: Landmark, color: "bg-blue-50 text-blue-600" },
+    { value: "E_WALLET", label: "E-Wallet", icon: Smartphone, color: "bg-emerald-50 text-emerald-600" },
+    { value: "CASH", label: "Cash", icon: Banknote, color: "bg-amber-50 text-amber-600" },
+  ];
+
+  const typeIcons: Record<string, { icon: any; color: string }> = {
+    BANK: { icon: Landmark, color: "bg-blue-50 text-blue-600" },
+    E_WALLET: { icon: Smartphone, color: "bg-emerald-50 text-emerald-600" },
+    CASH: { icon: Banknote, color: "bg-amber-50 text-amber-600" },
+  };
 
   const openAdd = () => {
     setName("");
     setBalance("");
+    setWalletType("BANK");
     setIsAddOpen(true);
   };
 
@@ -60,7 +77,7 @@ export default function WalletClient({ initialWallets }: { initialWallets: Walle
     setLoading(true);
 
     const initialBal = parseInt((balance ?? "").toString().replace(/[^0-9]/g, ""), 10) || 0;
-    const formData = { name, balance: initialBal };
+    const formData = { name, balance: initialBal, type: walletType };
 
     console.log("FORM DATA:", formData);
     const res = await addWallet(formData);
@@ -134,7 +151,16 @@ export default function WalletClient({ initialWallets }: { initialWallets: Walle
                   <WalletIcon className="h-6 w-6" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900 tracking-tight leading-tight">{w.wallet_name}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-gray-900 tracking-tight leading-tight">{w.wallet_name}</h3>
+                    <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                      w.type === "BANK" ? "bg-blue-50 text-blue-600" :
+                      w.type === "E_WALLET" ? "bg-emerald-50 text-emerald-600" :
+                      "bg-amber-50 text-amber-600"
+                    }`}>
+                      {w.type?.replace("_", " ") || "BANK"}
+                    </span>
+                  </div>
                   <p className="text-[12px] text-[#86868b] font-semibold tracking-tight mt-0.5">{w._count.transactions} transactions</p>
                 </div>
               </div>
@@ -160,7 +186,7 @@ export default function WalletClient({ initialWallets }: { initialWallets: Walle
             <div className="mt-10">
               <p className="text-[10px] font-bold text-[#86868b] uppercase tracking-widest mb-1">Current Balance</p>
               <p className="text-2xl font-bold text-gray-900 tracking-tight">
-                 {showBalance ? formatRupiah(w.balance) : "Rp •••••••"}
+                 {showBalance ? fmt(w.balance) : currency === "USD" ? "$ •••••••" : "Rp •••••••"}
               </p>
             </div>
           </div>
@@ -201,6 +227,33 @@ export default function WalletClient({ initialWallets }: { initialWallets: Walle
                   placeholder="e.g., BCA, Cash, GoPay"
                   className="w-full rounded-2xl border-none bg-gray-50/50 px-5 py-4 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-black/5 transition-all outline-none"
                 />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Wallet Type</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {walletTypeOptions.map((opt) => {
+                    const Icon = opt.icon;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setWalletType(opt.value)}
+                        className={`flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all active:scale-95 ${
+                          walletType === opt.value
+                            ? "border-emerald-500 bg-emerald-50/50 shadow-[0_0_10px_rgba(16,185,129,0.08)]"
+                            : "border-gray-100 bg-white/50 hover:bg-white hover:shadow-sm"
+                        }`}
+                      >
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${walletType === opt.value ? opt.color : "bg-gray-50 text-gray-400"}`}>
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <span className={`text-[11px] font-bold ${walletType === opt.value ? "text-gray-900" : "text-gray-500"}`}>
+                          {opt.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
               <div>
                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Initial Balance (Rp)</label>

@@ -5,6 +5,7 @@ import { Search, Bell, Sun, Moon, LogOut, Plus } from "lucide-react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useTheme } from "next-themes";
+import { useUserPrefs } from "@/components/prefs/UserPrefContext";
 import AddTransactionModal from "./AddTransactionModal";
 import {
   DropdownMenu,
@@ -35,6 +36,7 @@ export default function Header() {
   const [wallets, setWallets] = useState<{ id: string; name: string }[]>([]);
   const { user, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { t } = useUserPrefs();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -66,7 +68,7 @@ export default function Header() {
   const walletLabel = wallet === "all" ? "Semua Dompet" : wallet;
 
   // Extract first name from full name
-  const firstName = user?.user_metadata?.firstName || user?.email?.split("@")[0] || "User";
+  const firstName = user?.user_metadata?.displayName || user?.user_metadata?.firstName || user?.email?.split("@")[0] || "User";
 
   return (
     <>
@@ -89,7 +91,7 @@ export default function Header() {
               <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-gray-900" />
               <input
                 type="text"
-                placeholder="Search transactions..."
+                placeholder={t("common.search")}
                 className="w-full rounded-full border border-gray-200/80 bg-gray-50/80 py-2 pl-11 pr-4 text-sm font-medium text-gray-900 outline-none transition-all duration-300 hover:bg-white focus:border-gray-300 focus:bg-white focus:ring-[3px] focus:ring-gray-200/50 dark:border-transparent dark:bg-black/50 dark:text-white"
               />
             </div>
