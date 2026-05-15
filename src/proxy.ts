@@ -1,4 +1,4 @@
-import { NextResponse, NextRequest } from "next/server";
+﻿import { NextResponse, NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
 const appProtectedRoutes = ["/wallet", "/transactions", "/analytics", "/settings", "/budget", "/ai-chat", "/calendar", "/profile"];
@@ -24,7 +24,6 @@ export default async function middleware(request: NextRequest) {
   const isAdminRoute = adminRoutes.some((r) => pathname === r || pathname.startsWith(r + "/"));
   const isAuthRoute = authRoutes.some((r) => pathname === r || pathname.startsWith(r + "/"));
 
-  // FINANCE SUBDOMAIN
   if (isFinanceHost) {
     if (pathname.startsWith("/admin")) return NextResponse.redirect(protocol + "//dev." + baseDomain + pathname);
     if (!user && !isAuthRoute && isAppProtected) {
@@ -36,7 +35,6 @@ export default async function middleware(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // DEV SUBDOMAIN
   if (isDevHost) {
     if (!pathname.startsWith("/admin") && !pathname.startsWith("/_next") && pathname !== "/") {
       return NextResponse.redirect(protocol + "//finance." + baseDomain + pathname);
@@ -48,11 +46,16 @@ export default async function middleware(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // ROOT DOMAIN
   if (isRootDomain) {
     if (pathname === "/") {
       if (user) return NextResponse.redirect(protocol + "//finance." + baseDomain + "/dashboard");
       return supabaseResponse;
+    }
+    if (isAuthRoute) {
+      if (pathname === "/admin/login" || pathname.startsWith("/admin")) {
+        return NextResponse.redirect(protocol + "//dev." + baseDomain + pathname);
+      }
+      return NextResponse.redirect(protocol + "//finance." + baseDomain + pathname);
     }
     if (!user) {
       if (isAppProtected) return NextResponse.redirect(protocol + "//finance." + baseDomain + "/sign-in?redirect=" + pathname);
