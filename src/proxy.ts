@@ -1,11 +1,11 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
 const appProtectedRoutes = ["/wallet", "/transactions", "/analytics", "/settings", "/budget", "/ai-chat", "/calendar", "/profile"];
 const adminRoutes = ["/admin"];
 const authRoutes = ["/sign-in", "/sign-up", "/auth"];
 
-export default async function middleware(request) {
+export default async function middleware(request: Request) {
   const { supabaseResponse, user } = await updateSession(request);
   const url = new URL(request.url);
   const pathname = url.pathname;
