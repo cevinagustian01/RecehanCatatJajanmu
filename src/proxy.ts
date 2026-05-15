@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
+
 const appProtectedRoutes = ["/wallet", "/transactions", "/analytics", "/settings"];
 const adminRoutes = ["/admin"];
 const authRoutes = ["/sign-in", "/sign-up", "/auth", "/admin/login"];
@@ -9,6 +10,7 @@ export default async function middleware(request: Request) {
   const url = new URL(request.url);
   const pathname = url.pathname;
   const host = request.headers.get("host") || "";
+  const protocol = url.protocol;
 
   // Subdomain routing
   if (host.startsWith("finance.") && pathname === "/") {
@@ -38,6 +40,11 @@ export default async function middleware(request: Request) {
   if (user && isAuthRoute) {
     if (pathname === "/admin/login") {
       return NextResponse.redirect(new URL("/admin", request.url));
+    }
+    // Root domain: redirect to finance subdomain when logged in
+    if (!host.startsWith("finance.") && !host.startsWith("dev.") && !host.startsWith("www.")) {
+      const financeUrl = protocol + "//" + "finance." + host.split(":")[0] + "/dashboard";
+      return NextResponse.redirect(new URL(financeUrl));
     }
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
