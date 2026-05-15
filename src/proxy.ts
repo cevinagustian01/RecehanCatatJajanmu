@@ -1,85 +1,58 @@
 import { NextResponse, NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
-function isFinance(req: NextRequest): boolean {
-  const host = req.headers.get("host")?.toLowerCase() || "";
-  return host.startsWith("finance.") || host === "finance.localhost" || host.startsWith("finance-");
-}
-
-function isDev(req: NextRequest): boolean {
-  const host = req.headers.get("host")?.toLowerCase() || "";
-  return host.startsWith("dev.") || host === "dev.localhost" || host.startsWith("dev-");
-}
-
-function getBaseDomain(req: NextRequest): string {
-  const host = req.headers.get("host") || "";
+function getSubdomainAndBase(host: string): { subdomain: string; base: string } {
   const clean = host.split(":")[0];
   const parts = clean.split(".");
-  return parts.length > 2 ? parts.slice(-2).join(".") : clean;
+  if (parts.length <= 2) {
+    return { subdomain: "", base: clean };
+  }
+  // e.g., dev.finance.localhost -> subdomain=dev, base=finance.localhost
+  return { subdomain: parts[0], base: parts.slice(-2).join(".") };
 }
 
 export default async function middleware(req: NextRequest) {
   const { supabaseResponse, user } = await updateSession(req);
   const { pathname } = new URL(req.url);
+  const host = req.headers.get("host") || "";
 
-  if (pathname === "/admin/login") return supabaseResponse;
+  if (!host) return supabaseResponse;
 
-  const baseDomain = getBaseDomain(req);
-  const protocol = new URL(req.url).protocol;
+  const { subdomain, base } = getSubdomainAndBase(host);
+  const url = new URL(req.url);
+  const protocol = url.protocol;
 
-  if (isFinance(req)) {
-    if (pathname.startsWith("/admin")) {
-      return NextResponse.redirect(`${protocol}//dev.${baseDomain}${pathname}`);
-    }
-    if (!user) {
-      const protectedRoutes = ["/wallet", "/transactions", "/analytics", "/settings", "/budget", "/ai-chat", "/calendar", "/profile"];
-      const authRoutes = ["/sign-in", "/sign-up", "/auth"];
-      const isProtected = protectedRoutes.some((r) => pathname.startsWith(r));
-      const isAuth = authRoutes.some((r) => pathname === r || pathname.startsWith(r + "/"));
-      if (!isAuth && isProtected) {
-        const u = new URL("/sign-in", req.url);
-        u.searchParams.set("redirect", pathname);
-        return NextResponse.redirect(u);
-      }
-    }
-    if (user && ["/sign-in", "/sign-up", "/auth"].some((r) => pathname === r || pathname.startsWith(r + "/"))) {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
-    }
-    return supabaseResponse;
-  }
-
-  if (isDev(req)) {
-    if (!pathname.startsWith("/admin") && !pathname.startsWith("/_next") && !pathname.startsWith("/api") && !pathname.startsWith("/trpc") && pathname !== "/") {
-      return NextResponse.redirect(`${protocol}//finance.${baseDomain}${pathname}`);
-    }
+  if (subdomain === "dev") {
+    if (pathname === "/admin/login") return supabaseResponse;
     if (pathname.startsWith("/admin") && !user) {
       return NextResponse.redirect(new URL("/admin/login", req.url));
     }
-    if (pathname === "/" && !user) {
+    if (pathname === "/") {
+      if (user) return NextResponse.redirect(new URL("/admin", req.url));
       return NextResponse.redirect(new URL("/admin/login", req.url));
     }
     return supabaseResponse;
   }
 
-  if (pathname === "/") {
-    if (user) return NextResponse.redirect(new URL("/dashboard", req.url));
+  if (subdomain === "finance" || subdomain === "") {
+    if (pathname.startsWith("/admin")) {
+      return NextResponse.redirect(`${protocol}//dev.${base}${pathname}`);
+    }
+    const protectedRoutes = ["/wallet", "/transactions", "/analytics", "/settings", "/budget", "/ai-chat", "/calendar", "/profile"];
+    const authRoutes = ["/sign-in", "/sign-up", "/auth"];
+    const isProtected = protectedRoutes.some((r) => pathname.startsWith(r));
+    const isAuth = authRoutes.some((r) => pathname === r || pathname.startsWith(r + "/"));
+    if (!user && !isAuth && isProtected) {
+      const u = new URL("/sign-in", req.url);
+      u.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(u);
+    }
+    if (user && isAuth) return NextResponse.redirect(new URL("/dashboard", req.url));
     return supabaseResponse;
   }
-  if (["/sign-in", "/sign-up", "/auth"].some((r) => pathname === r || pathname.startsWith(r + "/"))) {
-    const u = new URL(pathname, req.url);
-    u.host = pathname.startsWith("/admin") ? `dev.${u.host}` : `finance.${u.host}`;
-    return NextResponse.redirect(u);
-  }
-  if (["/wallet", "/transactions", "/analytics", "/settings", "/budget", "/ai-chat", "/calendar", "/profile"].some((r) => pathname.startsWith(r)) && !user) {
-    const u = new URL("/sign-in", req.url);
-    u.host = `finance.${u.host}`;
-    u.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(u);
-  }
-  if (["/admin"].some((r) => pathname === r || pathname.startsWith(r + "/")) && !user) {
-    const u = new URL("/admin/login", req.url);
-    u.host = `dev.${u.host}`;
-    return NextResponse.redirect(u);
+
+  if (subdomain && subdomain !== "finance" && subdomain !== "dev") {
+    return NextResponse.redirect(`${protocol}//finance.${base}${pathname}`);
   }
 
   return supabaseResponse;
