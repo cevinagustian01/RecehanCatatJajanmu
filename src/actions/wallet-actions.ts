@@ -2,15 +2,17 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { createClient } from "@/lib/supabase/server";
 import { syncUser } from "@/lib/sync-user";
 
 export async function getWallets() {
   try {
-    const { userId } = await auth();
+    const supabase = await createClient();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const userId = authUser?.id;
     if (!userId) return [];
 
-    // Mengambil data sesuai userId dari Clerk
+    // Mengambil data sesuai userId dari Supabase Auth
     return await prisma.wallet.findMany({
       where: { userId },
       orderBy: { created_at: 'desc' }
@@ -23,14 +25,15 @@ export async function getWallets() {
 
 export async function createWallet(data: { name?: string; wallet_name?: string; balance: number }) {
   try {
-    const { userId } = await auth();
+    const supabase = await createClient();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const userId = authUser?.id;
     
     if (!userId) {
       return { success: false, message: "Kamu harus login dulu bos!" };
     }
 
-    const user = await currentUser();
-    const email = user?.emailAddresses?.[0]?.emailAddress;
+    const email = authUser?.email;
 
     // Ensure User row exists locally to prevent P2003
     const synced = email ? await syncUser(userId, email) : null;
@@ -42,7 +45,7 @@ export async function createWallet(data: { name?: string; wallet_name?: string; 
 
     await prisma.wallet.create({
       data: {
-        // wallet.userId must reference User.id (UUID), not Clerk userId
+        // wallet.userId must reference local User.id (UUID)
         userId: synced?.id ?? userId,
         wallet_name: walletName,
         balance: data.balance,

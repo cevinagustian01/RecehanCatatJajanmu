@@ -2,17 +2,18 @@
 
 import prisma from "@/lib/prisma"
 import { revalidatePath } from "next/cache";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_CATEGORIES } from "@/lib/categories";
 import { syncUser } from "@/lib/sync-user";
 
 export async function getTransactions() {
   try {
-    const { userId: clerkUserId } = await auth();
+    const supabase = await createClient();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const clerkUserId = authUser?.id;
     if (!clerkUserId) return [];
 
-    const clerk = await currentUser();
-    const email = clerk?.emailAddresses?.[0]?.emailAddress;
+    const email = authUser?.email;
 
     const synced = email ? await syncUser(clerkUserId, email) : null;
     const localUserId = synced?.id;
@@ -49,7 +50,9 @@ export async function getTransactions() {
 
 export async function deleteTransaction(txId: string) {
   try {
-    const { userId } = await auth();
+    const supabase = await createClient();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const userId = authUser?.id;
     if (!userId) {
       return { success: false, message: "Unauthenticated" };
     }
@@ -92,15 +95,16 @@ export async function addTransaction(data: {
   created_at: string | Date
 }) {
   try {
-    const { userId: clerkUserId } = await auth();
+    const supabase = await createClient();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const clerkUserId = authUser?.id;
     if (!clerkUserId) {
       return { success: false, message: "Unauthenticated" };
     }
 
-    const clerk = await currentUser();
-    const email = clerk?.emailAddresses?.[0]?.emailAddress;
+    const email = authUser?.email;
 
-    // Wallet.userId references local User.id (UUID), not Clerk's userId
+    // Wallet.userId references local User.id (UUID)
     const synced = email ? await syncUser(clerkUserId, email) : null;
     const localUserId = synced?.id;
     if (!localUserId) {
@@ -213,11 +217,12 @@ export async function addTransaction(data: {
 
 export async function getWalletsList() {
   try {
-    const { userId: clerkUserId } = await auth();
+    const supabase = await createClient();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const clerkUserId = authUser?.id;
     if (!clerkUserId) return [];
 
-    const clerk = await currentUser();
-    const email = clerk?.emailAddresses?.[0]?.emailAddress;
+    const email = authUser?.email;
 
     const synced = email ? await syncUser(clerkUserId, email) : null;
     const localUserId = synced?.id;
@@ -248,7 +253,9 @@ export async function updateTransactionDetails(
   }
 ) {
   try {
-    const { userId } = await auth();
+    const supabase = await createClient();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const userId = authUser?.id;
     if (!userId) {
       return { success: false, message: "Unauthenticated" };
     }
@@ -374,12 +381,13 @@ export async function updateTransactionDetails(
 
 export async function fetchTransactionsByDate(startDate: Date, endDate: Date) {
   try {
-    const { userId: clerkUserId } = await auth();
+    const supabase = await createClient();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const clerkUserId = authUser?.id;
     if (!clerkUserId) return { transactions: [], startDate, endDate };
 
 
-    const clerk = await currentUser();
-    const email = clerk?.emailAddresses?.[0]?.emailAddress;
+    const email = authUser?.email;
 
     const synced = email ? await syncUser(clerkUserId, email) : null;
     const localUserId = synced?.id;
@@ -427,11 +435,12 @@ export interface ChartDataPoint {
 
 export async function fetchChartData(period: ChartPeriod) {
   try {
-    const { userId: clerkUserId } = await auth();
+    const supabase = await createClient();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const clerkUserId = authUser?.id;
     if (!clerkUserId) return [];
 
-    const clerk = await currentUser();
-    const email = clerk?.emailAddresses?.[0]?.emailAddress;
+    const email = authUser?.email;
     const synced = email ? await syncUser(clerkUserId, email) : null;
     const localUserId = synced?.id;
     if (!localUserId) return [];

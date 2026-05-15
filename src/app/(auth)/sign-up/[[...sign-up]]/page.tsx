@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useSignUp } from "@clerk/nextjs";
 import { Wallet, Eye, EyeOff, Loader2, ArrowRight, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
 
 export default function SignUpPage() {
-  const { signUp } = useSignUp();
+  const supabase = createClient();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,11 +26,11 @@ export default function SignUpPage() {
     setIsLoading(true);
     setError("");
     try {
-      await signUp.sso({
-        strategy: "oauth_google",
-        redirectUrl: "/sso-callback",
-        redirectCallbackUrl: "/dashboard",
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
       });
+      if (error) throw error;
     } catch (err) {
       console.error("Google sign-up error:", err);
       setError("Failed to sign up with Google. Please try again.");
@@ -58,20 +58,17 @@ export default function SignUpPage() {
 
 
     try {
-      const result = await signUp.create({
-        emailAddress: email,
+      const { error } = await supabase.auth.signUp({
+        email,
         password,
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
       });
 
-
-      if (result.error === null) {
-        setSuccess(true);
-      } else {
-        setError(result.error.longMessage || "Failed to create account. Please try again.");
-      }
+      if (error) throw error;
+      setSuccess(true);
     } catch (err: any) {
       console.error("Email sign-up error:", err);
-      const msg = err.errors?.[0]?.message || "Failed to create account. Please try again.";
+      const msg = err.message || "Failed to create account. Please try again.";
       setError(msg);
     } finally {
       setIsLoading(false);

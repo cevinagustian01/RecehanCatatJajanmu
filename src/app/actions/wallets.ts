@@ -2,12 +2,14 @@
 
 import prisma from "@/lib/prisma"
 import { revalidatePath } from "next/cache";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { createClient } from "@/lib/supabase/server";
 import { syncUser } from "@/lib/sync-user";
 
 export async function getWallets() {
   try {
-    const { userId } = await auth();
+    const supabase = await createClient();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const userId = authUser?.id;
     if (!userId) return [];
 
     const wallets = await prisma.wallet.findMany({
@@ -23,7 +25,9 @@ export async function getWallets() {
 
 export async function getWalletsList() {
   try {
-    const { userId } = await auth();
+    const supabase = await createClient();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const userId = authUser?.id;
     if (!userId) return [];
 
     const wallets = await prisma.wallet.findMany({
@@ -49,19 +53,20 @@ export async function addWallet(data: {
   type?: string | null
 }) {
   try {
-    const { userId } = await auth();
+    const supabase = await createClient();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const userId = authUser?.id;
     if (!userId) {
       return { success: false, message: "Unauthenticated" };
     }
 
-    const user = await currentUser();
-    const email = user?.emailAddresses?.[0]?.emailAddress;
+    const email = authUser?.email;
 
     const synced = email ? await syncUser(userId, email) : null;
 
     await prisma.wallet.create({
       data: {
-        // IMPORTANT: wallet.userId must reference User.id (UUID), not Clerk userId
+        // IMPORTANT: wallet.userId must reference local User.id (UUID)
         userId: synced?.id ?? userId,
         wallet_name: data.name,
         balance: data.balance,
@@ -95,13 +100,14 @@ export async function updateWallet(id: string, data: {
   type?: string | null
 }) {
   try {
-    const { userId } = await auth();
+    const supabase = await createClient();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const userId = authUser?.id;
     if (!userId) {
       return { success: false, message: "Unauthenticated" };
     }
 
-    const user = await currentUser();
-    const email = user?.emailAddresses?.[0]?.emailAddress;
+    const email = authUser?.email;
     const synced = email ? await syncUser(userId, email) : null;
     const localUserId = synced?.id ?? userId;
 
@@ -139,13 +145,14 @@ export async function updateWallet(id: string, data: {
 
 export async function deleteWallet(id: string) {
   try {
-    const { userId } = await auth();
+    const supabase = await createClient();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const userId = authUser?.id;
     if (!userId) {
       return { success: false, message: "Unauthenticated" };
     }
 
-    const user = await currentUser();
-    const email = user?.emailAddresses?.[0]?.emailAddress;
+    const email = authUser?.email;
     const synced = email ? await syncUser(userId, email) : null;
     const localUserId = synced?.id ?? userId;
 

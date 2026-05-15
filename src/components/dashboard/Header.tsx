@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Search, Bell, Sun, Moon, LogOut, Plus } from "lucide-react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { useUser, useClerk } from "@clerk/nextjs";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { useTheme } from "next-themes";
 import AddTransactionModal from "./AddTransactionModal";
 import {
@@ -33,8 +33,7 @@ export default function Header() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [greeting, setGreeting] = useState<string>("");
   const [wallets, setWallets] = useState<{ id: string; name: string }[]>([]);
-  const { user } = useUser();
-  const { signOut } = useClerk();
+  const { user, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
@@ -67,7 +66,7 @@ export default function Header() {
   const walletLabel = wallet === "all" ? "Semua Dompet" : wallet;
 
   // Extract first name from full name
-  const firstName = user?.firstName || user?.fullName?.split(" ")[0] || "User";
+  const firstName = user?.user_metadata?.firstName || user?.email?.split("@")[0] || "User";
 
   return (
     <>
@@ -120,7 +119,7 @@ export default function Header() {
 
             {/* Profile Avatar */}
             <div className="h-9 w-9 shrink-0 cursor-pointer overflow-hidden rounded-full shadow-sm ring-1 ring-gray-200 transition-all hover:ring-gray-300">
-              <img src={user?.imageUrl || "/avatar-placeholder.png"} alt="Profile" className="h-full w-full object-cover" />
+              <img src={user?.user_metadata?.avatar_url || "/avatar-placeholder.png"} alt="Profile" className="h-full w-full object-cover" />
             </div>
           </div>
 

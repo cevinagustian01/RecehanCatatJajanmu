@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -12,7 +12,7 @@ export default function ProfileForm({
 }: {
   initial: { displayName: string | null; avatarUrl: string | null };
 }) {
-  const { user, isLoaded } = useUser();
+  const { user, isLoading } = useAuth();
 
   const [displayName, setDisplayName] = useState(initial.displayName ?? "");
   const [file, setFile] = useState<File | null>(null);
@@ -21,7 +21,7 @@ export default function ProfileForm({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const canSubmit = useMemo(() => isLoaded && !!user && !pending, [isLoaded, user, pending]);
+  const canSubmit = useMemo(() => !isLoading && !!user && !pending, [isLoading, user, pending]);
 
   useEffect(() => {
     return () => {
@@ -46,16 +46,11 @@ export default function ProfileForm({
             let nextAvatarUrl = previewUrl;
 
             if (file) {
-              // Upload directly to Clerk from client, then persist URL to PostgreSQL via server action.
-              const uploaded = await (user as any).setProfileImage({ file });
-
-              nextAvatarUrl =
-                uploaded?.imageUrl ??
-                uploaded?.profileImageUrl ??
-                (user as any).imageUrl ??
-                nextAvatarUrl;
-
-              if (!nextAvatarUrl) throw new Error("Failed to get uploaded image URL from Clerk.");
+              const formData = new FormData();
+              formData.append("file", file);
+              const res = await fetch("/api/upload/avatar", { method: "POST", body: formData });
+              const data = await res.json();
+              if (data.avatarUrl) nextAvatarUrl = data.avatarUrl;
             }
 
             const res = await updateProfile({

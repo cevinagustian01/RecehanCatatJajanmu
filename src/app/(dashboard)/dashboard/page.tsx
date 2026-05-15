@@ -1,4 +1,4 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { createClient } from "@/lib/supabase/server";
 import { syncUser } from "@/lib/sync-user";
 import WalletCard from "@/components/dashboard/WalletCard";
 import FinancialHealth from "@/components/dashboard/FinancialHealth";
@@ -116,9 +116,10 @@ async function DashboardData({ localUserId, timeRange, wallet }: { localUserId?:
 export default async function Home(props: {
   searchParams: Promise<{ timeRange?: string, wallet?: string }>
 }) {
-  const { userId } = await auth();
-  const user = await currentUser();
-  const synced = userId && user ? await syncUser(userId, user.emailAddresses[0].emailAddress) : null;
+  const supabase = await createClient();
+  const { data: { user: authUser } } = await supabase.auth.getUser();
+  const userId = authUser?.id;
+  const synced = userId && authUser?.email ? await syncUser(userId, authUser.email) : null;
   const localUserId: string | undefined = synced?.id;
   const searchParams = await props.searchParams;
   const timeRange = searchParams?.timeRange || "thisMonth";

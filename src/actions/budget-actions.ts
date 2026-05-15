@@ -2,17 +2,18 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_CATEGORIES } from "@/lib/categories";
 import { syncUser } from "@/lib/sync-user";
 
 export async function getBudgetsWithSpent() {
   try {
-    const { userId: clerkUserId } = await auth();
+    const supabase = await createClient();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const clerkUserId = authUser?.id;
     if (!clerkUserId) return [];
 
-    const clerk = await currentUser();
-    const email = clerk?.emailAddresses?.[0]?.emailAddress;
+    const email = authUser?.email;
 
     const synced = email ? await syncUser(clerkUserId, email) : null;
     const localUserId = synced?.id;
@@ -69,13 +70,14 @@ export async function upsertBudget(data: {
   icon?: string;
 }) {
   try {
-    const { userId: clerkUserId } = await auth();
+    const supabase = await createClient();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const clerkUserId = authUser?.id;
     if (!clerkUserId) return { success: false, message: "Unauthenticated" };
 
-    const clerk = await currentUser();
-    const email = clerk?.emailAddresses?.[0]?.emailAddress;
+    const email = authUser?.email;
 
-    // Wallet/Transaction/Budget FK needs local User.id (UUID) not Clerk userId
+    // Wallet/Transaction/Budget FK needs local User.id (UUID)
     const synced = email ? await syncUser(clerkUserId, email) : null;
     const localUserId = synced?.id;
 
@@ -166,13 +168,14 @@ export async function upsertBudget(data: {
 
 export async function deleteBudget(id: string) {
   try {
-    const { userId: clerkUserId } = await auth();
+    const supabase = await createClient();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const clerkUserId = authUser?.id;
     if (!clerkUserId) {
       return { success: false, message: "Unauthenticated" };
     }
 
-    const clerk = await currentUser();
-    const email = clerk?.emailAddresses?.[0]?.emailAddress;
+    const email = authUser?.email;
 
     const synced = email ? await syncUser(clerkUserId, email) : null;
     const localUserId = synced?.id;

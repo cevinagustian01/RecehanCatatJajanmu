@@ -19,13 +19,13 @@ import {
   LogOut
 } from "lucide-react";
 import { useState } from "react";
-import { useClerk } from "@clerk/nextjs";
+import { useAuth } from "@/components/auth/AuthProvider";
 import AddTransactionModal from "./AddTransactionModal";
 import { cn } from "@/lib/utils";
 
 export default function BottomNav() {
   const pathname = usePathname();
-  const { signOut } = useClerk();
+  const { signOut } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
 
@@ -157,7 +157,7 @@ export default function BottomNav() {
             <button
               onClick={() => {
                 setIsMoreOpen(false);
-                signOut({ redirectUrl: '/' });
+                signOut();
               }}
               className="w-full flex items-center justify-between p-4 bg-white dark:bg-[#1C1C1E] border border-red-100 dark:border-red-900/30 rounded-2xl mt-6 shadow-sm active:scale-[0.98] transition-transform group"
             >

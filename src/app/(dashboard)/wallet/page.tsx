@@ -1,14 +1,15 @@
 import prisma from "@/lib/prisma";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { createClient } from "@/lib/supabase/server";
 import WalletClient from "./WalletClient";
 import { syncUser } from "@/lib/sync-user";
 
 export const revalidate = 30;
 
 export default async function WalletPage() {
-  const { userId } = await auth();
-  const clerkUser = await currentUser();
-  const email = clerkUser?.emailAddresses?.[0]?.emailAddress;
+  const supabase = await createClient();
+  const { data: { user: authUser } } = await supabase.auth.getUser();
+  const userId = authUser?.id;
+  const email = authUser?.email;
 
   const synced = userId && email ? await syncUser(userId, email) : null;
   const localUserId = synced?.id ?? null;

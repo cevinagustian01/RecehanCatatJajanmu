@@ -1,4 +1,3 @@
-import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -6,8 +5,7 @@ import { SidebarProvider } from "@/components/dashboard/SidebarContext";
 import { BalanceVisibilityProvider } from "@/components/dashboard/BalanceVisibilityContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "sonner";
-import { currentUser } from "@clerk/nextjs/server";
-import { syncUser } from "@/lib/sync-user";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -43,22 +41,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const user = await currentUser();
-  
-  if (user) {
-    const email = user.emailAddresses?.[0]?.emailAddress || user.primaryEmailAddress?.emailAddress || "";
-    await syncUser(user.id, email);
-  }
-
   return (
-    <ClerkProvider>
-      <html lang="en" suppressHydrationWarning>
-        <body className={`${inter.variable} min-h-full bg-slate-50 text-slate-900 font-sans md:pb-0 dark:bg-slate-950 dark:text-slate-50 transition-colors duration-300`} suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.variable} min-h-full bg-slate-50 text-slate-900 font-sans md:pb-0 dark:bg-slate-950 dark:text-slate-50 transition-colors duration-300`} suppressHydrationWarning>
+        <AuthProvider>
           <ThemeProvider>
             <SidebarProvider>
               <BalanceVisibilityProvider>
@@ -67,8 +58,8 @@ export default async function RootLayout({
             </SidebarProvider>
             <Toaster position="top-center" richColors />
           </ThemeProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+        </AuthProvider>
+      </body>
+    </html>
   );
 }

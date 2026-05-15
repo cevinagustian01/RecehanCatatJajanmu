@@ -74,8 +74,8 @@ export default async function AdminTransactionsPage({
                   {format(new Date(tx.created_at), "dd MMM yyyy, HH:mm")}
                 </TableCell>
                 <TableCell className="font-medium text-slate-900 dark:text-slate-200">
-                  <span className="block text-sm" title={tx.wallet?.user?.clerk_id || tx.wallet?.user?.id}>
-                    {tx.wallet?.user?.clerk_id || tx.wallet?.user?.telegram_id || "Unknown User"}
+                  <span className="block text-sm" title={tx.wallet?.user?.auth_user_id || tx.wallet?.user?.id}>
+                    {tx.wallet?.user?.auth_user_id || tx.wallet?.user?.telegram_id || "Unknown User"}
                   </span>
                   <span className="block text-xs text-slate-500 dark:text-slate-400">
                     Wallet: {tx.wallet?.wallet_name || "N/A"}

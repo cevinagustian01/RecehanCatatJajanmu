@@ -1,9 +1,10 @@
-import { currentUser } from "@clerk/nextjs/server";
+import { createClient } from "@/lib/supabase/server";
 import prisma from "@/lib/prisma";
 
 export default async function AdminDashboard() {
-  const user = await currentUser();
-  console.log("[ADMIN PAGE] currentUserId:", user?.id, "rendering admin dashboard");
+  const supabase = await createClient();
+  const { data: { user: authUser } } = await supabase.auth.getUser();
+  console.log("[ADMIN PAGE] currentUserId:", authUser?.id, "rendering admin dashboard");
 
   const usersCount = await prisma.user.count();
   const txCount = await prisma.transaction.count();

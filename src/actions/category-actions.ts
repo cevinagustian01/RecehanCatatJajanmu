@@ -2,11 +2,13 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { auth } from "@clerk/nextjs/server";
+import { createClient } from "@/lib/supabase/server";
 
 export async function getCategories() {
   try {
-    const { userId } = await auth();
+    const supabase = await createClient();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const userId = authUser?.id;
     if (!userId) return [];
 
     const categories = await prisma.category.findMany({
@@ -28,7 +30,9 @@ export async function getCategories() {
 
 export async function addCustomCategory(data: { name: string; icon?: string; type?: string }) {
   try {
-    const { userId } = await auth();
+    const supabase = await createClient();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const userId = authUser?.id;
     if (!userId) {
       return { success: false, message: "Unauthenticated" };
     }
@@ -66,7 +70,9 @@ export async function addCustomCategory(data: { name: string; icon?: string; typ
 
 export async function deleteCategory(id: string) {
   try {
-    const { userId } = await auth();
+    const supabase = await createClient();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const userId = authUser?.id;
     if (!userId) {
       return { success: false, message: "Unauthenticated" };
     }

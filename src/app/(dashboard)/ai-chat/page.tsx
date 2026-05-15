@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Sparkles, Send } from "lucide-react";
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 /**
  * Utility: Get Indonesian time-of-day greeting
@@ -25,7 +25,7 @@ interface ChatMessage {
 }
 
 export default function AIChatPage() {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [greeting, setGreeting] = useState<string>("");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -38,7 +38,7 @@ export default function AIChatPage() {
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const firstName = user?.firstName || user?.fullName?.split(" ")[0] || "User";
+  const firstName = user?.user_metadata?.firstName || user?.email?.split("@")[0] || "User";
 
   useEffect(() => {
     setGreeting(getTimeOfDayGreeting());

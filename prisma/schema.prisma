@@ -14,7 +14,7 @@ enum Role {
 
 model User {
   id             String   @id @default(uuid())
-  clerk_id       String?  @unique
+  auth_user_id   String?  @unique
   email          String   @unique
 
   // Existing Telegram identity (already in schema as telegram_id)
@@ -39,7 +39,7 @@ model User {
   // Credits & Subscription
   credits           Int      @default(10)
   maxCredits        Int      @default(10)
-  subscriptionPlan  String   @default("FREE") // FREE or PRO
+  subscriptionPlan  String   @default("FREE") // FREE, PRO, ULTRA
 
   // Notifications (Settings page)
   notifyTransactionAlerts Boolean @default(false)
@@ -107,5 +107,27 @@ model Category {
   user      User     @relation(fields: [userId], references: [id])
   budgets   Budget[]
   transactions Transaction[]
+}
+
+// CMS: Landing Page Content
+model LandingPageContent {
+  id        String   @id @default(uuid())
+  section   String   @unique // hero, features, cta, testimonials, faq
+  title     String?
+  subtitle  String?
+  content   Json?    // flexible content per section
+  isActive  Boolean  @default(true)
+  order     Int      @default(0)
+  updated_at DateTime @default(now())
+  created_at DateTime @default(now())
+}
+
+// CMS: Site Settings
+model SiteSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  type      String   @default("string") // string, number, boolean, json
+  updated_at DateTime @default(now())
 }
 

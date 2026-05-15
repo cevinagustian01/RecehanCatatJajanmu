@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { UserActions } from "./UserActions";
+import { AddUserModal } from "./AddUserModal";
 import { format } from "date-fns";
 
 export default async function AdminUsersPage() {
@@ -10,13 +11,16 @@ export default async function AdminUsersPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-slate-900 dark:text-white">User Management</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">User Management</h1>
+        <AddUserModal />
+      </div>
       
       <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100 dark:bg-slate-900 dark:border-slate-800">
         <Table>
           <TableHeader>
             <TableRow className="dark:border-slate-800">
-              <TableHead className="text-slate-500 dark:text-slate-400">ID</TableHead>
+              <TableHead className="text-slate-500 dark:text-slate-400">User</TableHead>
               <TableHead className="text-slate-500 dark:text-slate-400">Role</TableHead>
               <TableHead className="text-slate-500 dark:text-slate-400">Joined Date</TableHead>
               <TableHead className="text-slate-500 dark:text-slate-400">Monthly Budget</TableHead>
@@ -34,9 +38,10 @@ export default async function AdminUsersPage() {
             {users.map((user) => (
               <TableRow key={user.id} className="dark:border-slate-800 dark:hover:bg-slate-800/50">
                 <TableCell className="font-medium text-slate-900 dark:text-slate-200">
-                  <span className="truncate block max-w-[200px]" title={user.clerk_id || user.telegram_id || user.id}>
-                    {user.clerk_id || user.telegram_id || user.id.substring(0, 8) + "..."}
-                  </span>
+                  <span className="block text-sm">{user.displayName || user.email || "Unknown"}</span>
+                  {user.displayName && user.email && (
+                    <span className="block text-xs text-slate-400 dark:text-slate-500">{user.email}</span>
+                  )}
                 </TableCell>
                 <TableCell>
                   <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${user.role === 'ADMIN' ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400' : 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300'}`}>

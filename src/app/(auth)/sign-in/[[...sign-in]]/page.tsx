@@ -1,49 +1,51 @@
 "use client";
 
-
-import { useState } from "react";
-import { useSignIn } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Wallet, Eye, EyeOff, Loader2, ArrowRight } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
-export default function SignInPage() {
-  const { signIn } = useSignIn();
+function SignInForm() {
+  const supabase = createClient();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/dashboard";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
 
   const handleGoogleSignIn = async (e: React.MouseEvent) => {
     e.preventDefault();
     try {
-      await signIn.sso({
-        strategy: "oauth_google",
-        redirectUrl: "/sso-callback",
-        redirectCallbackUrl: "/dashboard",
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
       });
+      if (error) throw error;
     } catch (err) {
       console.error("Google Auth Error", err);
+      setError("Failed to sign in with Google.");
     }
   };
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
     try {
-      const result = await signIn.create({ identifier: email, password });
-      if (result.error === null) {
-        await signIn.finalize();
-        router.push("/dashboard");
-      } else {
-        setError(result.error.longMessage || "Failed to sign in. Please check your credentials.");
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      // Tunggu session tersimpan di cookies
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("Session not established");
       }
+      // Redirect dengan full page reload biar server baca cookies baru
+      window.location.href = redirectTo;
     } catch (err: any) {
       console.error("Login Error:", err);
-      setError(err.errors?.[0]?.longMessage || "Failed to sign in. Please check your credentials.");
+      setError(err.message || "Failed to sign in. Please check your credentials.");
     } finally {
       setIsLoading(false);
     }
@@ -165,5 +167,17 @@ export default function SignInPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen w-full flex items-center justify-center bg-[#F5F5F7]">
+        <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+      </div>
+    }>
+      <SignInForm />
+    </Suspense>
   );
 }

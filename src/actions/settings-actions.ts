@@ -1,23 +1,20 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { syncUser } from "@/lib/sync-user";
 
 type ActionResult<T = unknown> = { success: true; data: T } | { success: false; message: string };
 
-function safeFirstEmail(clerk: Awaited<ReturnType<typeof currentUser>>) {
-  return clerk?.emailAddresses?.[0]?.emailAddress;
-}
-
 async function getLocalUserId() {
-  const { userId: clerkUserId } = await auth();
-  if (!clerkUserId) return null;
+  const supabase = await createClient();
+  const { data: { user: authUser } } = await supabase.auth.getUser();
+  const authUserId = authUser?.id;
+  if (!authUserId) return null;
 
-  const clerk = await currentUser();
-  const email = safeFirstEmail(clerk);
-  const synced = email ? await syncUser(clerkUserId, email) : null;
+  const email = authUser?.email;
+  const synced = email ? await syncUser(authUserId, email) : null;
   return synced?.id ?? null;
 }
 
@@ -70,23 +67,27 @@ export async function uploadAvatar(data: {
 
     const { file } = data;
 
-    const clerk = await currentUser();
-    if (!clerk) return { success: false, message: "Unauthenticated" };
+    const supabase = await createClient();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (!authUser) return { success: false, message: "Unauthenticated" };
 
-    // Upload to Clerk storage and sync across Clerk components.
-    // Clerk typing may differ by version, so we cast.
-    await (clerk as any).setProfileImage({ file });
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(`${authUser.id}/${Date.now()}_${file.name}`, buffer, {
+        contentType: file.type,
+        upsert: true,
+      });
 
+    if (uploadError) {
+      return { success: false, message: "Failed to upload avatar" };
+    }
 
-    // Clerk profile image URL is exposed on the clerk user object.
-    const avatarUrl =
-      (clerk as any).imageUrl ??
-      (clerk as any).profileImageUrl ??
-      (clerk as any).profile_image_url ??
-      null;
+    const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(uploadData.path);
+    const avatarUrl = urlData?.publicUrl ?? null;
 
     if (!avatarUrl) {
-      // Fallback: keep DB consistent only after we can read a URL.
       return { success: false, message: "Avatar uploaded but URL was not returned" };
     }
 
