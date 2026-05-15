@@ -1,72 +1,83 @@
 import { NextResponse, NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
-export default async function middleware(request: NextRequest) {
-  const { supabaseResponse, user } = await updateSession(request);
-  const url = new URL(request.url);
-  const { pathname } = url;
-  const host = request.headers.get("host") || "";
+function isFinance(req: NextRequest): boolean {
+  const host = req.headers.get("host")?.toLowerCase() || "";
+  return host.startsWith("finance.") || host === "finance.localhost" || host.startsWith("finance-");
+}
 
-  if (!host) return supabaseResponse;
+function isDev(req: NextRequest): boolean {
+  const host = req.headers.get("host")?.toLowerCase() || "";
+  return host.startsWith("dev.") || host === "dev.localhost" || host.startsWith("dev-");
+}
 
-  const hostLower = host.toLowerCase();
-  const isFinance = hostLower.startsWith("finance.");
-  const isDev = hostLower.startsWith("dev.");
+function getBaseDomain(req: NextRequest): string {
+  const host = req.headers.get("host") || "";
+  const clean = host.split(":")[0];
+  const parts = clean.split(".");
+  return parts.length > 2 ? parts.slice(-2).join(".") : clean;
+}
 
-  if (isFinance) {
+export default async function middleware(req: NextRequest) {
+  const { supabaseResponse, user } = await updateSession(req);
+  const { pathname } = new URL(req.url);
+
+  if (pathname === "/admin/login") return supabaseResponse;
+
+  const baseDomain = getBaseDomain(req);
+  const protocol = new URL(req.url).protocol;
+
+  if (isFinance(req)) {
     if (pathname.startsWith("/admin")) {
-      const baseHost = hostLower.replace(/^finance\./, "");
-      return NextResponse.redirect(`${url.protocol}//dev.${baseHost}${pathname}`);
+      return NextResponse.redirect(`${protocol}//dev.${baseDomain}${pathname}`);
     }
-    const protectedRoutes = ["/wallet", "/transactions", "/analytics", "/settings", "/budget", "/ai-chat", "/calendar", "/profile"];
-    const authRoutes = ["/sign-in", "/sign-up", "/auth"];
-    const isProtected = protectedRoutes.some((r) => pathname.startsWith(r));
-    const isAuth = authRoutes.some((r) => pathname === r || pathname.startsWith(r + "/"));
-    if (!user && !isAuth && isProtected) {
-      const u = new URL(`/sign-in?redirect=${pathname}`, request.url);
-      return NextResponse.redirect(u);
+    if (!user) {
+      const protectedRoutes = ["/wallet", "/transactions", "/analytics", "/settings", "/budget", "/ai-chat", "/calendar", "/profile"];
+      const authRoutes = ["/sign-in", "/sign-up", "/auth"];
+      const isProtected = protectedRoutes.some((r) => pathname.startsWith(r));
+      const isAuth = authRoutes.some((r) => pathname === r || pathname.startsWith(r + "/"));
+      if (!isAuth && isProtected) {
+        const u = new URL("/sign-in", req.url);
+        u.searchParams.set("redirect", pathname);
+        return NextResponse.redirect(u);
+      }
     }
-    if (user && isAuth) return NextResponse.redirect(new URL("/dashboard", request.url));
+    if (user && ["/sign-in", "/sign-up", "/auth"].some((r) => pathname === r || pathname.startsWith(r + "/"))) {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
     return supabaseResponse;
   }
 
-  if (isDev) {
-    if (pathname === "/admin/login") return supabaseResponse;
+  if (isDev(req)) {
     if (!pathname.startsWith("/admin") && !pathname.startsWith("/_next") && !pathname.startsWith("/api") && !pathname.startsWith("/trpc") && pathname !== "/") {
-      const baseHost = hostLower.replace(/^dev\./, "");
-      return NextResponse.redirect(`${url.protocol}//finance.${baseHost}${pathname}`);
+      return NextResponse.redirect(`${protocol}//finance.${baseDomain}${pathname}`);
     }
-    if (pathname.startsWith("/admin")) {
-      if (!user) return NextResponse.redirect(new URL("/admin/login", request.url));
+    if (pathname.startsWith("/admin") && !user) {
+      return NextResponse.redirect(new URL("/admin/login", req.url));
     }
-    if (pathname === "/") {
-      if (user) return NextResponse.redirect(new URL("/admin", request.url));
-      return NextResponse.redirect(new URL("/admin/login", request.url));
+    if (pathname === "/" && !user) {
+      return NextResponse.redirect(new URL("/admin/login", req.url));
     }
     return supabaseResponse;
   }
-
-  const isRootAuth = ["/sign-in", "/sign-up", "/auth"].some((r) => pathname === r || pathname.startsWith(r + "/"));
-  const isRootProtected = ["/wallet", "/transactions", "/analytics", "/settings", "/budget", "/ai-chat", "/calendar", "/profile"].some((r) => pathname.startsWith(r));
-  const isRootAdmin = ["/admin"].some((r) => pathname === r || pathname.startsWith(r + "/"));
 
   if (pathname === "/") {
-    if (user) return NextResponse.redirect(new URL("/dashboard", request.url));
+    if (user) return NextResponse.redirect(new URL("/dashboard", req.url));
     return supabaseResponse;
   }
-  if (isRootAuth) {
-    const u = new URL(pathname, request.url);
+  if (["/sign-in", "/sign-up", "/auth"].some((r) => pathname === r || pathname.startsWith(r + "/"))) {
+    const u = new URL(pathname, req.url);
     u.host = pathname.startsWith("/admin") ? `dev.${u.host}` : `finance.${u.host}`;
     return NextResponse.redirect(u);
   }
-  if (isRootProtected && !user) {
-    const u = new URL("/sign-in", request.url);
+  if (["/wallet", "/transactions", "/analytics", "/settings", "/budget", "/ai-chat", "/calendar", "/profile"].some((r) => pathname.startsWith(r)) && !user) {
+    const u = new URL("/sign-in", req.url);
     u.host = `finance.${u.host}`;
     u.searchParams.set("redirect", pathname);
     return NextResponse.redirect(u);
   }
-  if (isRootAdmin && !user) {
-    const u = new URL("/admin/login", request.url);
+  if (["/admin"].some((r) => pathname === r || pathname.startsWith(r + "/")) && !user) {
+    const u = new URL("/admin/login", req.url);
     u.host = `dev.${u.host}`;
     return NextResponse.redirect(u);
   }
