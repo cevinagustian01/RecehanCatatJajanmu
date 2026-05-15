@@ -36,7 +36,11 @@ export default async function middleware(request: NextRequest) {
   }
 
   if (isDevHost) {
-    if (!pathname.startsWith("/admin") && !pathname.startsWith("/_next") && pathname !== "/") {
+    if (pathname === "/") {
+      if (user) return NextResponse.redirect(protocol + "//dev." + baseDomain + "/admin");
+      return NextResponse.redirect(protocol + "//dev." + baseDomain + "/admin/login");
+    }
+    if (!pathname.startsWith("/admin") && !pathname.startsWith("/_next")) {
       return NextResponse.redirect(protocol + "//finance." + baseDomain + pathname);
     }
     if (!user && isAdminRoute && pathname !== "/admin/login") {
