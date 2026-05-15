@@ -3,7 +3,8 @@ import { updateSession } from "@/lib/supabase/middleware";
 
 export default async function middleware(request: NextRequest) {
   const { supabaseResponse, user } = await updateSession(request);
-  const { pathname } = new URL(request.url);
+  const url = new URL(request.url);
+  const { pathname } = url;
   const host = request.headers.get("host") || "";
 
   if (!host) return supabaseResponse;
@@ -15,7 +16,7 @@ export default async function middleware(request: NextRequest) {
   if (isFinance) {
     if (pathname.startsWith("/admin")) {
       const baseHost = hostLower.replace(/^finance\./, "");
-      return NextResponse.redirect(`${request.url.protocol}//dev.${baseHost}${pathname}`);
+      return NextResponse.redirect(`${url.protocol}//dev.${baseHost}${pathname}`);
     }
     const protectedRoutes = ["/wallet", "/transactions", "/analytics", "/settings", "/budget", "/ai-chat", "/calendar", "/profile"];
     const authRoutes = ["/sign-in", "/sign-up", "/auth"];
@@ -33,7 +34,7 @@ export default async function middleware(request: NextRequest) {
     if (pathname === "/admin/login") return supabaseResponse;
     if (!pathname.startsWith("/admin") && !pathname.startsWith("/_next") && !pathname.startsWith("/api") && !pathname.startsWith("/trpc") && pathname !== "/") {
       const baseHost = hostLower.replace(/^dev\./, "");
-      return NextResponse.redirect(`${request.url.protocol}//finance.${baseHost}${pathname}`);
+      return NextResponse.redirect(`${url.protocol}//finance.${baseHost}${pathname}`);
     }
     if (pathname.startsWith("/admin")) {
       if (!user) return NextResponse.redirect(new URL("/admin/login", request.url));
